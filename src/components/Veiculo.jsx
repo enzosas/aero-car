@@ -22,7 +22,7 @@ export default function Veiculo() {
         velmin: -0.25,
         velvolante: 0.02,
         limitevolante: 0.7,
-        comprimentorodas: 15.0
+        comprimentorodas: 13.0
     }
 
     useFrame(() => {

@@ -1,19 +1,20 @@
 import * as THREE from 'three'
 
 const ptcontrole = 10
-const subdivisoes = 16
-const espacamento = 40.0
+const subdivisoes = 32
+const espacamento = 140.0
 const ondulacao = 140.0
 const fatorborda = 0.3
-const bboxmin = -180.0
-const bboxmax = 180.0
+
+const bboxmin = -(ptcontrole - 1) * espacamento / 2.0
+const bboxmax = (ptcontrole - 1) * espacamento / 2.0
 
 const numpatches = (ptcontrole - 1) / 3
 export const pontostotal = numpatches * subdivisoes + 1
 
 const controlpoints = []
-const offsetx = -(ptcontrole - 1) * espacamento / 2.0
-const offsetz = -(ptcontrole - 1) * espacamento / 2.0
+const offsetx = bboxmin
+const offsetz = bboxmin
 
 for (let i = 0; i < ptcontrole; i++) {
     controlpoints[i] = []

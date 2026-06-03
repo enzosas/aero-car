@@ -19,6 +19,7 @@ export default function App() {
     <KeyboardControls map={teclas}>
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden', backgroundColor: '#e6e6e6' }}>
         <Canvas camera={{ position: [0, 120, 200], fov: 60 }}>
+          <color attach="background" args={['#87ceeb']} />
           <ambientLight intensity={0.5} />
           <directionalLight position={[100, 200, 100]} />
 
