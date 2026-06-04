@@ -14,9 +14,9 @@ const configpadrao = {
     alturaparabrisa: 4.5,
     comprimentorodas: 13.0,
     taxaBaseCockpitTras: 0.1,
-    taxaBaseCockpitFrente: 0.7,
     taxaTopoCockpitTras: 0.2,
-    taxaTopoCockpitFrente: 0.6
+    taxaTopoCockpitFrente: 0.6,
+    taxaBaseCockpitFrente: 0.7
   },
   rodas: {
     raio: 2.0,
