@@ -25,6 +25,24 @@ const geraCorCarro = (quantidade) => {
   return (0.25 * posicaonogrupo) + (0.25 * offset)
 }
 
+function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
+  let passo = 0.5
+  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa')) {
+    passo = 0.01
+  }
+  return (
+    <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
+      <label>{rotulo}</label>
+      <input
+        type='number'
+        step={passo}
+        value={config[categoria][chave]}
+        onChange={(e) => atualizar(categoria, chave, e.target.value)}
+      />
+    </div>
+  )
+}
+
 export default function App() {
 
   const [config, setConfig] = useState({
@@ -123,14 +141,23 @@ export default function App() {
         </div>
         <div className='telaJogo__colunaMenuAtivo'>
           <div className='telaJogo__colunaMenuAtivo__inner'>
-            <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
-              <label>largura</label>
-              <input
-                type='number'
-                value={config.dimensoes.largura}
-                onChange={(e) => atualizarConfig('dimensoes', 'largura', e.target.value)}
-              />
-            </div>
+            {Object.entries(config).map(([categoria, propriedades]) => (
+              <div key={categoria} style={{ marginBottom: '15px' }}>
+                <div>
+                  {categoria}
+                </div>
+                {Object.keys(propriedades).map(chave => (
+                  <InputConfig
+                    key={`${categoria}-${chave}`}
+                    rotulo={chave}
+                    categoria={categoria}
+                    chave={chave}
+                    config={config}
+                    atualizar={atualizarConfig}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </div>
