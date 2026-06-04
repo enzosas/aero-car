@@ -48,15 +48,15 @@ export default function App() {
   const [config, setConfig] = useState({
     dimensoes: {
       largura: 10.0,
-      comprimento: 45.0,
+      comprimento: 20.0,
       alturachao: 2.0,
-      alturaporta: 5.5,
+      alturaporta: 4.5,
       alturaparabrisa: 4.5,
-      comprimentorodas: 43.0,
-      taxaBaseCockpitTras: 0.75,
-      taxaTopoCockpitTras: 0.8,
-      taxaTopoCockpitFrente: 0.95,
-      taxaBaseCockpitFrente: 1.0
+      comprimentorodas: 13.0,
+      taxaBaseCockpitTras: 0.1,
+      taxaTopoCockpitTras: 0.2,
+      taxaTopoCockpitFrente: 0.6,
+      taxaBaseCockpitFrente: 0.7
     },
     rodas: {
       raio: 2.0,
@@ -66,7 +66,7 @@ export default function App() {
     fisica: {
       aceleracao: 0.01,
       desaceleracao: 0.95,
-      velmax: 10.0,
+      velmax: 1.0,
       velmin: -0.25,
       velvolante: 0.02,
       limitevolante: 0.7
