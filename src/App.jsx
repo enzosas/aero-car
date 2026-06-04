@@ -4,34 +4,7 @@ import { OrbitControls, KeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Veiculo from './components/Veiculo'
 import Terreno from './components/Terreno'
-
-const configpadrao = {
-  dimensoes: {
-    largura: 10.0,
-    comprimento: 20.0,
-    alturachao: 2.0,
-    alturaporta: 4.5,
-    alturaparabrisa: 4.5,
-    comprimentorodas: 13.0,
-    taxaBaseCockpitTras: 0.1,
-    taxaTopoCockpitTras: 0.2,
-    taxaTopoCockpitFrente: 0.6,
-    taxaBaseCockpitFrente: 0.7
-  },
-  rodas: {
-    raio: 2.0,
-    largura: 1.5,
-    segmentos: 16
-  },
-  fisica: {
-    aceleracao: 0.01,
-    desaceleracao: 0.95,
-    velmax: 1.0,
-    velmin: -0.25,
-    velvolante: 0.02,
-    limitevolante: 0.7
-  }
-}
+import './App.css'
 
 const geraCorCarro = (quantidade) => {
   const grupo = Math.floor(quantidade / 4)
@@ -53,9 +26,51 @@ const geraCorCarro = (quantidade) => {
 }
 
 export default function App() {
+
+  const [config, setConfig] = useState({
+    dimensoes: {
+      largura: 10.0,
+      comprimento: 45.0,
+      alturachao: 2.0,
+      alturaporta: 5.5,
+      alturaparabrisa: 4.5,
+      comprimentorodas: 43.0,
+      taxaBaseCockpitTras: 0.75,
+      taxaTopoCockpitTras: 0.8,
+      taxaTopoCockpitFrente: 0.95,
+      taxaBaseCockpitFrente: 1.0
+    },
+    rodas: {
+      raio: 2.0,
+      largura: 1.5,
+      segmentos: 16
+    },
+    fisica: {
+      aceleracao: 0.01,
+      desaceleracao: 0.95,
+      velmax: 10.0,
+      velmin: -0.25,
+      velvolante: 0.02,
+      limitevolante: 0.7
+    }
+  })
+
   const [carros, setCarros] = useState([
     { id: 1, matiz: 0.0, pos: [0, 0, 0] }
   ])
+
+  const atualizarConfig = (categoria, chave, valor) => {
+    setConfig(anterior => ({
+      ...anterior,
+      [categoria]: {
+        ...anterior[categoria],
+        [chave]: parseFloat(valor) || 0
+      }
+    }))
+  }
+
+  const [showConfigCarro, setShowConfigCarro] = useState(false)
+  const [showConfigTerreno, setShowConfigTerreno] = useState(false)
 
   const gerarCarro = () => {
     setCarros(antigos => {
@@ -85,10 +100,39 @@ export default function App() {
 
   return (
     <KeyboardControls map={teclas}>
-      <div style={{ position: 'absolute', zIndex: 10, padding: '20px' }}>
-        <button onClick={gerarCarro} style={{ padding: '10px', cursor: 'pointer' }}>
-          gerar carro
-        </button>
+      <div className='telaJogo'>
+        <div className='telaJogo__colunaMenu'>
+          <button onClick={gerarCarro} class="frutiger-button">
+            <div class="inner">
+              <div class="top-white"></div>
+              <span class="text">carro config</span>
+            </div>
+          </button>
+          <button onClick={gerarCarro} class="frutiger-button">
+            <div class="inner">
+              <div class="top-white"></div>
+              <span class="text">terreno config</span>
+            </div>
+          </button>
+          <button onClick={gerarCarro} class="frutiger-button">
+            <div class="inner">
+              <div class="top-white"></div>
+              <span class="text">gerar carro</span>
+            </div>
+          </button>
+        </div>
+        <div className='telaJogo__colunaMenuAtivo'>
+          <div className='telaJogo__colunaMenuAtivo__inner'>
+            <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
+              <label>largura</label>
+              <input
+                type='number'
+                value={config.dimensoes.largura}
+                onChange={(e) => atualizarConfig('dimensoes', 'largura', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
@@ -102,7 +146,7 @@ export default function App() {
               key={carro.id}
               matiz={carro.matiz}
               posicaoInicial={carro.pos}
-              config={configpadrao}
+              config={config}
             />
           ))}
 
