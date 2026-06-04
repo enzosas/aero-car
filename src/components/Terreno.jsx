@@ -126,7 +126,7 @@ export const obternormalterrenoem = (x, z) => {
     return new THREE.Vector3().crossVectors(tz, tx).normalize()
 }
 
-export default function Terreno() {
+export default function Terreno({ config }) {
     const geometria = useMemo(() => {
         const vertices = []
 
@@ -150,13 +150,12 @@ export default function Terreno() {
                 addquad(v00, v10, v11, v01)
             }
         }
-
         const geo = new THREE.BufferGeometry()
         geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3))
         geo.computeVertexNormals()
 
         return geo
-    }, [])
+    }, [config])
 
     return (
         <mesh geometry={geometria}>

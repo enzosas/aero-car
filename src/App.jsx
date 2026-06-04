@@ -233,7 +233,7 @@ export default function App() {
             />
           ))}
 
-          <Terreno />
+          <Terreno config={configTerreno}/>
 
           <OrbitControls
             mouseButtons={{
