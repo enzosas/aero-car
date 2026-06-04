@@ -27,7 +27,7 @@ const geraCorCarro = (quantidade) => {
 
 function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
   let passo = 0.5
-  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa')) {
+  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa') || rotulo.toLowerCase().includes('fator')) {
     passo = 0.01
   }
   return (
@@ -84,12 +84,32 @@ export default function App() {
     }
   })
 
+  const [configTerreno, setConfigTerreno] = useState({
+    parametros: {
+      ptcontrole: 10,
+      subdivisoes: 32,
+      espacamento: 140.0,
+      ondulacao: 140.0,
+      fatorborda: 0.3
+    }
+  })
+
   const [carros, setCarros] = useState([
     { id: 1, matiz: 0.0, pos: [0, 0, 0] }
   ])
 
   const atualizarConfig = (categoria, chave, valor) => {
     setConfig(anterior => ({
+      ...anterior,
+      [categoria]: {
+        ...anterior[categoria],
+        [chave]: parseFloat(valor) || 0
+      }
+    }))
+  }
+
+  const atualizarConfigTerreno = (categoria, chave, valor) => {
+    setConfigTerreno(anterior => ({
       ...anterior,
       [categoria]: {
         ...anterior[categoria],
@@ -166,6 +186,29 @@ export default function App() {
                       chave={chave}
                       config={config}
                       atualizar={atualizarConfig}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {showConfigTerreno && (
+          <div className='telaJogo__colunaMenuAtivo'>
+            <div className='telaJogo__colunaMenuAtivo__inner'>
+              {Object.entries(configTerreno).map(([categoria, propriedades]) => (
+                <div key={categoria} style={{ marginBottom: '15px' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    {categoria}
+                  </div>
+                  {Object.keys(propriedades).map(chave => (
+                    <InputConfig
+                      key={`${categoria}-${chave}`}
+                      rotulo={chave}
+                      categoria={categoria}
+                      chave={chave}
+                      config={configTerreno}
+                      atualizar={atualizarConfigTerreno}
                     />
                   ))}
                 </div>
