@@ -2,7 +2,7 @@ import { useRef, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
-import { obteralturaterrenoem, obternormalterrenoem } from '../mapa'
+import { obteralturaterrenoem, obternormalterrenoem } from './Terreno'
 
 function Chassi({ matiz, dimensoes }) {
     const geometria = useMemo(() => {
