@@ -155,31 +155,32 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config 
     const larguraroda = config.rodas.largura
     const segrodas = config.rodas.segmentos
     const alturachao = config.dimensoes.alturachao
+    const rodaRaio = config.rodas.raio
 
     return (
         <group ref={chassiref} position={posicaoInicial}>
             <Chassi matiz={matiz} dimensoes={config.dimensoes} />
 
-            <group ref={rodaesqfrenteref} position={[-metadelarg, alturachao, metadecomp]}>
+            <group ref={rodaesqfrenteref} position={[-metadelarg, rodaRaio, metadecomp]}>
                 <mesh rotation={[0, 0, Math.PI / 2]}>
                     <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
             </group>
 
-            <group ref={rodadirfrenteref} position={[metadelarg, alturachao, metadecomp]}>
+            <group ref={rodadirfrenteref} position={[metadelarg, rodaRaio, metadecomp]}>
                 <mesh rotation={[0, 0, Math.PI / 2]}>
                     <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
             </group>
 
-            <mesh position={[-metadelarg, alturachao, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh position={[-metadelarg, rodaRaio, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
                 <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
 
-            <mesh position={[metadelarg, alturachao, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh position={[metadelarg, rodaRaio, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
                 <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
