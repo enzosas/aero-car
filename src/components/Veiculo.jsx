@@ -4,14 +4,14 @@ import { useKeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { obteralturaterrenoem, obternormalterrenoem } from '../mapa'
 
-function Chassi({ matiz }) {
+function Chassi({ matiz, dimensoes }) {
     const geometria = useMemo(() => {
-        const metadelarg = 5
-        const metadecomp = 10
-        const alturachao = 2
-        const alturaporta = alturachao + 4.5
-        const alturaparabrisa = 4.5
-        const comp = 20
+        const metadelarg = dimensoes.largura / 2
+        const metadecomp = dimensoes.comprimento / 2
+        const alturachao = dimensoes.alturachao
+        const alturaporta = alturachao + dimensoes.alturaporta
+        const alturaparabrisa = dimensoes.alturaparabrisa
+        const comp = dimensoes.comprimento
 
         const c = []
 
@@ -25,15 +25,15 @@ function Chassi({ matiz }) {
         c[6] = new THREE.Vector3(metadelarg, alturaporta, metadecomp)
         c[7] = new THREE.Vector3(-metadelarg, alturaporta, metadecomp)
 
-        c[8] = new THREE.Vector3(-metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * 0.2))
-        c[9] = new THREE.Vector3(metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * 0.2))
-        c[10] = new THREE.Vector3(metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * 0.6))
-        c[11] = new THREE.Vector3(-metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * 0.6))
+        c[8] = new THREE.Vector3(-metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitTras))
+        c[9] = new THREE.Vector3(metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitTras))
+        c[10] = new THREE.Vector3(metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitFrente))
+        c[11] = new THREE.Vector3(-metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitFrente))
 
-        c[12] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp + (comp * 0.1))
-        c[13] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp + (comp * 0.1))
-        c[14] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp + (comp * 0.7))
-        c[15] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp + (comp * 0.7))
+        c[12] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitTras))
+        c[13] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitTras))
+        c[14] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitFrente))
+        c[15] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitFrente))
 
         const vertices = []
 
@@ -67,7 +67,7 @@ function Chassi({ matiz }) {
         geo.computeVertexNormals()
 
         return geo
-    }, [])
+    }, [dimensoes])
 
     const cor = useMemo(() => {
         return new THREE.Color().setHSL(matiz, 1.0, 0.5)
@@ -80,7 +80,7 @@ function Chassi({ matiz }) {
     )
 }
 
-export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0] }) {
+export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config }) {
     const chassiref = useRef()
     const rodaesqfrenteref = useRef()
     const rodadirfrenteref = useRef()
@@ -90,16 +90,6 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0] }) {
     const [angulovolante, setangulovolante] = useState(0)
     const [rotacaocarro, setrotacaocarro] = useState(0)
 
-    const fisica = {
-        aceleracao: 0.01,
-        desaceleracao: 0.95,
-        velmax: 1.0,
-        velmin: -0.25,
-        velvolante: 0.02,
-        limitevolante: 0.7,
-        comprimentorodas: 13.0
-    }
-
     useFrame(() => {
         const { frente, tras, esquerda, direita } = get()
 
@@ -107,21 +97,21 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0] }) {
         let anguloatual = angulovolante
 
         if (frente) {
-            velatual += fisica.aceleracao
-            if (velatual > fisica.velmax) velatual = fisica.velmax
+            velatual += config.fisica.aceleracao
+            if (velatual > config.fisica.velmax) velatual = config.fisica.velmax
         } else if (tras) {
-            velatual -= fisica.aceleracao
-            if (velatual < fisica.velmin) velatual = fisica.velmin
+            velatual -= config.fisica.aceleracao
+            if (velatual < config.fisica.velmin) velatual = config.fisica.velmin
         } else {
-            velatual *= fisica.desaceleracao
+            velatual *= config.fisica.desaceleracao
         }
 
         if (esquerda) {
-            anguloatual += fisica.velvolante
-            if (anguloatual > fisica.limitevolante) anguloatual = fisica.limitevolante
+            anguloatual += config.fisica.velvolante
+            if (anguloatual > config.fisica.limitevolante) anguloatual = config.fisica.limitevolante
         } else if (direita) {
-            anguloatual -= fisica.velvolante
-            if (anguloatual < -fisica.limitevolante) anguloatual = -fisica.limitevolante
+            anguloatual -= config.fisica.velvolante
+            if (anguloatual < -config.fisica.limitevolante) anguloatual = -config.fisica.limitevolante
         } else {
             anguloatual *= 0.85
         }
@@ -131,7 +121,7 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0] }) {
 
         if (chassiref.current) {
             const fvel = 1.0 / (1.0 + Math.abs(velatual) * 0.5)
-            const taxagiro = (velatual / fisica.comprimentorodas) * Math.tan(anguloatual) * fvel
+            const taxagiro = (velatual / config.dimensoes.comprimentorodas) * Math.tan(anguloatual) * fvel
 
             let novarotacao = rotacaocarro + taxagiro
             setrotacaocarro(novarotacao)
@@ -159,31 +149,38 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0] }) {
         }
     })
 
+    const metadelarg = config.dimensoes.largura / 2
+    const metadecomp = config.dimensoes.comprimentorodas / 2
+    const raioroda = config.rodas.raio
+    const larguraroda = config.rodas.largura
+    const segrodas = config.rodas.segmentos
+    const alturachao = config.dimensoes.alturachao
+
     return (
         <group ref={chassiref} position={posicaoInicial}>
-            <Chassi matiz={matiz} />
+            <Chassi matiz={matiz} dimensoes={config.dimensoes} />
 
-            <group ref={rodaesqfrenteref} position={[-5, 2, 6.5]}>
+            <group ref={rodaesqfrenteref} position={[-metadelarg, alturachao, metadecomp]}>
                 <mesh rotation={[0, 0, Math.PI / 2]}>
-                    <cylinderGeometry args={[2, 2, 1.5, 16]} />
+                    <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
             </group>
 
-            <group ref={rodadirfrenteref} position={[5, 2, 6.5]}>
+            <group ref={rodadirfrenteref} position={[metadelarg, alturachao, metadecomp]}>
                 <mesh rotation={[0, 0, Math.PI / 2]}>
-                    <cylinderGeometry args={[2, 2, 1.5, 16]} />
+                    <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
             </group>
 
-            <mesh position={[-5, 2, -6.5]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[2, 2, 1.5, 16]} />
+            <mesh position={[-metadelarg, alturachao, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
 
-            <mesh position={[5, 2, -6.5]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[2, 2, 1.5, 16]} />
+            <mesh position={[metadelarg, alturachao, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
         </group>

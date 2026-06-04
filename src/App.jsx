@@ -5,6 +5,34 @@ import * as THREE from 'three'
 import Veiculo from './components/Veiculo'
 import Terreno from './components/Terreno'
 
+const configpadrao = {
+  dimensoes: {
+    largura: 10.0,
+    comprimento: 20.0,
+    alturachao: 2.0,
+    alturaporta: 4.5,
+    alturaparabrisa: 4.5,
+    comprimentorodas: 13.0,
+    taxaBaseCockpitTras: 0.1,
+    taxaBaseCockpitFrente: 0.7,
+    taxaTopoCockpitTras: 0.2,
+    taxaTopoCockpitFrente: 0.6
+  },
+  rodas: {
+    raio: 2.0,
+    largura: 1.5,
+    segmentos: 16
+  },
+  fisica: {
+    aceleracao: 0.01,
+    desaceleracao: 0.95,
+    velmax: 1.0,
+    velmin: -0.25,
+    velvolante: 0.02,
+    limitevolante: 0.7
+  }
+}
+
 const geraCorCarro = (quantidade) => {
   const grupo = Math.floor(quantidade / 4)
   const posicaonogrupo = quantidade % 4
@@ -74,6 +102,7 @@ export default function App() {
               key={carro.id}
               matiz={carro.matiz}
               posicaoInicial={carro.pos}
+              config={configpadrao}
             />
           ))}
 
