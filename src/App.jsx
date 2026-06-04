@@ -49,7 +49,7 @@ function FundoImagem() {
   textura.wrapS = THREE.ClampToEdgeWrapping
   textura.wrapT = THREE.ClampToEdgeWrapping
   textura.repeat.set(1, 0.8)
-  textura.offset.y = -0.1
+  textura.offset.y = -0.2
 
   return <primitive attach="background" object={textura} />
 }
@@ -131,46 +131,48 @@ export default function App() {
     <KeyboardControls map={teclas}>
       <div className='telaJogo'>
         <div className='telaJogo__colunaMenu'>
-          <button onClick={gerarCarro} class="frutiger-button">
-            <div class="inner">
-              <div class="top-white"></div>
-              <span class="text">carro config</span>
+          <button onClick={() => setShowConfigCarro(!showConfigCarro)} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">carro config</span>
             </div>
           </button>
-          <button onClick={gerarCarro} class="frutiger-button">
-            <div class="inner">
-              <div class="top-white"></div>
-              <span class="text">terreno config</span>
+          <button onClick={() => setShowConfigTerreno(!showConfigTerreno)} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">terreno config</span>
             </div>
           </button>
-          <button onClick={gerarCarro} class="frutiger-button">
-            <div class="inner">
-              <div class="top-white"></div>
-              <span class="text">gerar carro</span>
+          <button onClick={gerarCarro} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">gerar carro</span>
             </div>
           </button>
         </div>
-        <div className='telaJogo__colunaMenuAtivo'>
-          <div className='telaJogo__colunaMenuAtivo__inner'>
-            {Object.entries(config).map(([categoria, propriedades]) => (
-              <div key={categoria} style={{ marginBottom: '15px' }}>
-                <div>
-                  {categoria}
+        {showConfigCarro && (
+          <div className='telaJogo__colunaMenuAtivo'>
+            <div className='telaJogo__colunaMenuAtivo__inner'>
+              {Object.entries(config).map(([categoria, propriedades]) => (
+                <div key={categoria} style={{ marginBottom: '15px' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    {categoria}
+                  </div>
+                  {Object.keys(propriedades).map(chave => (
+                    <InputConfig
+                      key={`${categoria}-${chave}`}
+                      rotulo={chave}
+                      categoria={categoria}
+                      chave={chave}
+                      config={config}
+                      atualizar={atualizarConfig}
+                    />
+                  ))}
                 </div>
-                {Object.keys(propriedades).map(chave => (
-                  <InputConfig
-                    key={`${categoria}-${chave}`}
-                    rotulo={chave}
-                    categoria={categoria}
-                    chave={chave}
-                    config={config}
-                    atualizar={atualizarConfig}
-                  />
-                ))}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
