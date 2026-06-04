@@ -194,7 +194,7 @@ export default function Terreno({ config }) {
 
     return (
         <mesh geometry={geometria}>
-            <meshStandardMaterial color="#baff4b" side={THREE.DoubleSide} opacity={0.6} transparent={true} />
+            <meshStandardMaterial color="#baff4b" side={THREE.DoubleSide} opacity={config.visualizacao.fatorOpacidade} transparent={true} />
         </mesh>
     )
 }

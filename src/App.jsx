@@ -91,6 +91,9 @@ export default function App() {
       espacamento: 140.0,
       ondulacao: 140.0,
       fatorborda: 0.3
+    },
+    visualizacao: {
+      fatorOpacidade: 0.6,
     }
   })
 
