@@ -36,7 +36,7 @@ export default function Terreno() {
 
     return (
         <mesh geometry={geometria}>
-            <meshStandardMaterial color="#86c947" side={THREE.DoubleSide} />
+            <meshStandardMaterial color="#9bff3e" side={THREE.DoubleSide} />
         </mesh>
     )
 }
