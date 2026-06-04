@@ -219,7 +219,7 @@ export default function App() {
       </div>
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
-        <Canvas camera={{ position: [0, 120, 200], fov: 60 }}>
+        <Canvas camera={{ position: [-400, 120, 400], fov: 60 }}>
           <FundoImagem />
           <ambientLight intensity={0.5} />
           <directionalLight position={[100, 200, 100]} />
