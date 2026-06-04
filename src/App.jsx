@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, KeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Veiculo from './components/Veiculo'
@@ -41,6 +41,17 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
       />
     </div>
   )
+}
+
+function FundoImagem() {
+  const textura = useLoader(THREE.TextureLoader, '/fundo.jpg')
+  textura.colorSpace = THREE.SRGBColorSpace
+  textura.wrapS = THREE.ClampToEdgeWrapping
+  textura.wrapT = THREE.ClampToEdgeWrapping
+  textura.repeat.set(1, 0.8)
+  textura.offset.y = -0.1
+
+  return <primitive attach="background" object={textura} />
 }
 
 export default function App() {
@@ -164,7 +175,7 @@ export default function App() {
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
         <Canvas camera={{ position: [0, 120, 200], fov: 60 }}>
-          <color attach="background" args={['#87ceeb']} />
+          <FundoImagem />
           <ambientLight intensity={0.5} />
           <directionalLight position={[100, 200, 100]} />
 
