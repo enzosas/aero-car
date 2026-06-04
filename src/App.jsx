@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import Veiculo from './components/Veiculo'
 import Terreno from './components/Terreno'
 import './App.css'
+import fundoUrl from './fundo.jpg'
 
 const geraCorCarro = (quantidade) => {
   const grupo = Math.floor(quantidade / 4)
@@ -44,7 +45,7 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
 }
 
 function FundoImagem() {
-  const textura = useLoader(THREE.TextureLoader, '/fundo.jpg')
+  const textura = useLoader(THREE.TextureLoader, fundoUrl)
   textura.colorSpace = THREE.SRGBColorSpace
   textura.wrapS = THREE.ClampToEdgeWrapping
   textura.wrapT = THREE.ClampToEdgeWrapping
