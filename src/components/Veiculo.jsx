@@ -122,24 +122,18 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config 
         if (chassiref.current) {
             const fvel = 1.0 / (1.0 + Math.abs(velatual) * 0.5)
             const taxagiro = (velatual / config.dimensoes.comprimentorodas) * Math.tan(anguloatual) * fvel
-
             let novarotacao = rotacaocarro + taxagiro
             setrotacaocarro(novarotacao)
-
-            chassiref.current.position.x += Math.sin(novarotacao) * velatual
-            chassiref.current.position.z += Math.cos(novarotacao) * velatual
-
             const posx = chassiref.current.position.x
             const posz = chassiref.current.position.z
-
-            chassiref.current.position.y = obteralturaterrenoem(posx, posz)
-
             const cima = obternormalterrenoem(posx, posz)
             const direcaoplana = new THREE.Vector3(Math.sin(novarotacao), 0, Math.cos(novarotacao))
             const direitavetor = new THREE.Vector3().crossVectors(cima, direcaoplana).normalize()
             const frentevetor = new THREE.Vector3().crossVectors(direitavetor, cima).normalize()
-
-            const matriz = new THREE.Matrix4().makeBasis(direitavetor, cima, frentevetor)
+            frentevetor.multiplyScalar(velatual)
+            chassiref.current.position.add(frentevetor)
+            chassiref.current.position.y = obteralturaterrenoem(chassiref.current.position.x, chassiref.current.position.z)
+            const matriz = new THREE.Matrix4().makeBasis(direitavetor, cima, frentevetor.normalize())
             chassiref.current.quaternion.setFromRotationMatrix(matriz)
         }
 
