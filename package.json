@@ -9,6 +9,7 @@
     "build:single": "vite build --config vite.config.single.js",
     "lint": "eslint .",
     "preview": "vite preview",
+    "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
