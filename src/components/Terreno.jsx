@@ -256,11 +256,11 @@ export const ArvoreMesh = ({ arvore }) => {
     );
 }
 
-export default function Terreno({ config }) {
+export default function Terreno({ config, arvconfig }) {
 
     const { geometria, arvoresGeradas } = useMemo(() => {
         const params = config?.parametros;
-        const arvoreparams = config?.arvores;
+        const arvoreparams = arvconfig?.arvores;
 
         if (params) {
             atualizarMatrizTerreno(params);
@@ -304,7 +304,7 @@ export default function Terreno({ config }) {
             geometria: geo,
             arvoresGeradas: arvores
         };
-    }, [config]);
+    }, [config, arvconfig]);
 
     return (
         <group>

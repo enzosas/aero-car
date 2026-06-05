@@ -78,6 +78,16 @@ function FundoImagem() {
   return <primitive attach="background" object={textura} />
 }
 
+const criarAtualizador = (setEstado) => (categoria, chave, valor) => {
+  setEstado(anterior => ({
+    ...anterior,
+    [categoria]: {
+      ...anterior[categoria],
+      [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
+    }
+  }))
+}
+
 export default function App() {
 
   const [config, setConfig] = useState({
@@ -118,58 +128,46 @@ export default function App() {
     },
     visualizacao: {
       fatorOpacidade: 0.6,
-    },
-    arvores: {
-        quantidade: 50,
-        alturaTronco: 40.0,
-        alturaTroncoRandExtra: 50.0,
-        raioTronco: 5.0,
-        raioTroncoRandExtra: 3.0,
-        inclinacaoMax: 0.15,
-        segmentosTronco: 7,
-        copaMinEsferas: 3,
-        copaMaxExtraEsferas: 3,
-        raioEsfera: 30.0,
-        raioEsferaRandExtra: 20.0,
-        segmentosEsfera: 8,
-        espalhamentoCopa: 100.0,
-        offsetYCopaRand: 0.6,
-        escalaCopaBase: [1.0, 0.6, 1.0],
-        escalaCopaRand: [0.4, 0.3, 0.4],
-        segmentosGalho: 5,
-        galhoAlturaMinBaseRatio: 0.3,
-        galhoAlturaRatioRandExtra: 0.25, 
-        galhoRaioBaseRatio: 0.4,
-        galhoRaioPontaRatio: 0.15
     }
   })
+
+  const [configArvore, setConfigArvore] = useState({
+    arvores: {
+      quantidade: 50,
+      alturaTronco: 40.0,
+      alturaTroncoRandExtra: 50.0,
+      raioTronco: 5.0,
+      raioTroncoRandExtra: 3.0,
+      inclinacaoMax: 0.15,
+      segmentosTronco: 7,
+      copaMinEsferas: 3,
+      copaMaxExtraEsferas: 3,
+      raioEsfera: 30.0,
+      raioEsferaRandExtra: 20.0,
+      segmentosEsfera: 8,
+      espalhamentoCopa: 100.0,
+      offsetYCopaRand: 0.6,
+      escalaCopaBase: [1.0, 0.6, 1.0],
+      escalaCopaRand: [0.4, 0.3, 0.4],
+      segmentosGalho: 5,
+      galhoAlturaMinBaseRatio: 0.3,
+      galhoAlturaRatioRandExtra: 0.25,
+      galhoRaioBaseRatio: 0.4,
+      galhoRaioPontaRatio: 0.15
+    }
+  })
+
+  const atualizarConfig = criarAtualizador(setConfig)
+  const atualizarConfigTerreno = criarAtualizador(setConfigTerreno)
+  const atualizarConfigArvore = criarAtualizador(setConfigArvore)
 
   const [carros, setCarros] = useState([
     { id: 1, matiz: 0.0, pos: [0, 0, 0] }
   ])
 
-  const atualizarConfig = (categoria, chave, valor) => {
-    setConfig(anterior => ({
-      ...anterior,
-      [categoria]: {
-        ...anterior[categoria],
-        [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
-      }
-    }))
-  }
-
-  const atualizarConfigTerreno = (categoria, chave, valor) => {
-    setConfigTerreno(anterior => ({
-      ...anterior,
-      [categoria]: {
-        ...anterior[categoria],
-        [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
-      }
-    }))
-  }
-
   const [showConfigCarro, setShowConfigCarro] = useState(false)
   const [showConfigTerreno, setShowConfigTerreno] = useState(false)
+  const [showConfigArvore, setShowConfigArvore] = useState(false)
 
   const gerarCarro = () => {
     setCarros(antigos => {
@@ -211,6 +209,12 @@ export default function App() {
             <div className="inner">
               <div className="top-white"></div>
               <span className="text">terreno config</span>
+            </div>
+          </button>
+          <button onClick={() => setShowConfigArvore(!showConfigArvore)} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">arvore config</span>
             </div>
           </button>
           <button onClick={gerarCarro} className="frutiger-button">
@@ -266,6 +270,29 @@ export default function App() {
             </div>
           </div>
         )}
+        {showConfigArvore && (
+          <div className='telaJogo__colunaMenuAtivo'>
+            <div className='telaJogo__colunaMenuAtivo__inner'>
+              {Object.entries(configArvore).map(([categoria, propriedades]) => (
+                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria'>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    {categoria}
+                  </div>
+                  {Object.keys(propriedades).map(chave => (
+                    <InputConfig
+                      key={`${categoria}-${chave}`}
+                      rotulo={chave}
+                      categoria={categoria}
+                      chave={chave}
+                      config={configArvore}
+                      atualizar={atualizarConfigArvore}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
@@ -283,7 +310,7 @@ export default function App() {
             />
           ))}
 
-          <Terreno config={configTerreno}/>
+          <Terreno config={configTerreno} arvconfig={configArvore}/>
 
           <OrbitControls
             mouseButtons={{
