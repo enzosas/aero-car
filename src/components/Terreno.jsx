@@ -148,52 +148,165 @@ export const obternormalterrenoem = (x, z) => {
     return new THREE.Vector3().crossVectors(tz, tx).normalize()
 }
 
+export const gerarPosicaoArvore = () => {
+    const { bboxmin, bboxmax } = TerrenoState;
+    if (bboxmin === bboxmax) return new THREE.Vector3(0, 0, 0);
+    const x = bboxmin + Math.random() * (bboxmax - bboxmin);
+    const z = bboxmin + Math.random() * (bboxmax - bboxmin);
+    const y = obteralturaterrenoem(x, z);
+    return new THREE.Vector3(x, y, z);
+}
+
+export const gerarUmaArvore = (id) => {
+    const posicao = gerarPosicaoArvore();
+    if (!posicao) return null;
+    const alturaTronco = 40.0 + Math.random() * 50.0; 
+    const raioTronco = 5.0 + Math.random() * 3.0;
+    const inclinacaoX = (Math.random() - 0.5) * 0.15;
+    const inclinacaoZ = (Math.random() - 0.5) * 0.15;
+    const geometriaTronco = new THREE.CylinderGeometry(raioTronco * 0.7, raioTronco, alturaTronco, 7);
+    geometriaTronco.translate(0, alturaTronco / 2, 0);
+    geometriaTronco.rotateX(inclinacaoX);
+    geometriaTronco.rotateZ(inclinacaoZ);
+    const geometriasCopa = [];
+    const geometriasGalho = [];
+    const numEsferas = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < numEsferas; i++) {
+        const raioEsfera = 30.4 + Math.random() * 20.6;
+        const esfera = new THREE.SphereGeometry(raioEsfera, 8, 8);
+        const escalaX = 1.0 + Math.random() * 0.4;
+        const escalaY = 0.6 + Math.random() * 0.3;
+        const escalaZ = 1.0 + Math.random() * 0.4;
+        esfera.scale(escalaX, escalaY, escalaZ);
+        const offsetX = i === 0 ? 0 : (Math.random() - 0.5) * 100;
+        const offsetZ = i === 0 ? 0 : (Math.random() - 0.5) * 100;
+        const offsetY = alturaTronco + (Math.random() * 0.6) + raioEsfera / 2;
+        esfera.translate(offsetX, offsetY, offsetZ);
+        esfera.rotateX(inclinacaoX);
+        esfera.rotateZ(inclinacaoZ);
+        geometriasCopa.push(esfera);
+        if (i !== 0) {
+            const startY = (alturaTronco * 0.3) + (Math.random() * (alturaTronco * 0.25));
+            const start = new THREE.Vector3(0, startY, 0);
+            const end = new THREE.Vector3(offsetX, offsetY, offsetZ);
+            const distance = start.distanceTo(end);
+            const raioBaseGalho = raioTronco * 0.4;
+            const raioPontaGalho = raioTronco * 0.15;
+            const galho = new THREE.CylinderGeometry(raioPontaGalho, raioBaseGalho, distance, 5);
+            const direction = new THREE.Vector3().subVectors(end, start).normalize();
+            const up = new THREE.Vector3(0, 1, 0);
+            const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
+            galho.applyQuaternion(quaternion);
+            const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+            galho.translate(mid.x, mid.y, mid.z);
+            galho.rotateX(inclinacaoX);
+            galho.rotateZ(inclinacaoZ);
+            geometriasGalho.push(galho);
+        }
+    }
+    return {
+        id: id,
+        posicao: posicao,
+        geometriaTronco: geometriaTronco,
+        geometriasGalho: geometriasGalho,
+        geometriasCopa: geometriasCopa
+    };
+}
+
+export const gerarArvoresAleatorias = (quantidade) => {
+    const arvores = [];
+    for (let i = 0; i < quantidade; i++) {
+        const novaArvore = gerarUmaArvore(i);
+        if (novaArvore) {
+            arvores.push(novaArvore);
+        }
+    }
+    return arvores;
+}
+
+export const ArvoreMesh = ({ arvore }) => {
+    return (
+        <group position={[arvore.posicao.x, arvore.posicao.y, arvore.posicao.z]}>
+            <mesh geometry={arvore.geometriaTronco}>
+                <meshStandardMaterial color="#795c47" />
+            </mesh>
+            {arvore.geometriasGalho.map((geometriaGalho, index) => (
+                <mesh key={`galho-${index}`} geometry={geometriaGalho}>
+                    <meshStandardMaterial color="#795c47" />
+                </mesh>
+            ))}
+            {arvore.geometriasCopa.map((geometriaEsfera, index) => (
+                <mesh key={index} geometry={geometriaEsfera}>
+                    <meshStandardMaterial color="#baff4b" opacity={1} transparent={true} />
+                </mesh>
+            ))}
+        </group>
+    );
+}
+
 export default function Terreno({ config }) {
-    const geometria = useMemo(() => {
+
+    const { geometria, arvoresGeradas } = useMemo(() => {
         const params = config?.parametros;
 
         if (params) {
             atualizarMatrizTerreno(params);
         }
 
-        const vertices = []
+        const vertices = [];
 
         const addquad = (p1, p2, p3, p4) => {
             if (!p1 || !p2 || !p3 || !p4) return;
-            vertices.push(p1.x, p1.y, p1.z)
-            vertices.push(p2.x, p2.y, p2.z)
-            vertices.push(p3.x, p3.y, p3.z)
+            vertices.push(p1.x, p1.y, p1.z);
+            vertices.push(p2.x, p2.y, p2.z);
+            vertices.push(p3.x, p3.y, p3.z);
 
-            vertices.push(p1.x, p1.y, p1.z)
-            vertices.push(p3.x, p3.y, p3.z)
-            vertices.push(p4.x, p4.y, p4.z)
-        }
+            vertices.push(p1.x, p1.y, p1.z);
+            vertices.push(p3.x, p3.y, p3.z);
+            vertices.push(p4.x, p4.y, p4.z);
+        };
 
         for (let i = 0; i < TerrenoState.pontostotal - 1; i++) {
             for (let j = 0; j < TerrenoState.pontostotal - 1; j++) {
                 if (TerrenoState.malha[i] && TerrenoState.malha[i + 1]) {
-                    const v00 = TerrenoState.malha[i][j]
-                    const v10 = TerrenoState.malha[i + 1][j]
-                    const v01 = TerrenoState.malha[i][j + 1]
-                    const v11 = TerrenoState.malha[i + 1][j + 1]
+                    const v00 = TerrenoState.malha[i][j];
+                    const v10 = TerrenoState.malha[i + 1][j];
+                    const v01 = TerrenoState.malha[i][j + 1];
+                    const v11 = TerrenoState.malha[i + 1][j + 1];
 
-                    addquad(v00, v10, v11, v01)
+                    addquad(v00, v10, v11, v01);
                 }
             }
         }
 
-        const geo = new THREE.BufferGeometry()
+        const geo = new THREE.BufferGeometry();
         if (vertices.length > 0) {
-            geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3))
-            geo.computeVertexNormals()
+            geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+            geo.computeVertexNormals();
         }
 
-        return geo
-    }, [config])
+        const quantidadeDeArvores = config?.parametros?.qtdArvores || 50;
+        const arvores = gerarArvoresAleatorias(quantidadeDeArvores);
+
+        return {
+            geometria: geo,
+            arvoresGeradas: arvores
+        };
+    }, [config]);
 
     return (
-        <mesh geometry={geometria}>
-            <meshStandardMaterial color="#baff4b" side={THREE.DoubleSide} opacity={config.visualizacao.fatorOpacidade} transparent={true} />
-        </mesh>
-    )
+        <group>
+            <mesh geometry={geometria}>
+                <meshStandardMaterial
+                    color="#baff4b"
+                    side={THREE.DoubleSide}
+                    opacity={config?.visualizacao?.fatorOpacidade || 1}
+                    transparent={true}
+                />
+            </mesh>
+            {arvoresGeradas.map((arvore) => (
+                <ArvoreMesh key={arvore.id} arvore={arvore} />
+            ))}
+        </group>
+    );
 }
