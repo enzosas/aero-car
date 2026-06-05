@@ -27,9 +27,32 @@ const geraCorCarro = (quantidade) => {
 }
 
 function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
-  let passo = 0.5
-  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa') || rotulo.toLowerCase().includes('fator')) {
-    passo = 0.01
+  let passo = 1
+  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa') || rotulo.toLowerCase().includes('fator') || rotulo.toLowerCase().includes('escala')) {
+    passo = 0.1
+  }
+
+  const valorAtual = config[categoria][chave];
+
+  if (Array.isArray(valorAtual)) {
+    return (
+      <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
+        <label>{rotulo} (x, y, z)</label>
+          {valorAtual.map((v, index) => (
+            <input
+              key={index}
+              type='number'
+              step={passo}
+              value={v}
+              onChange={(e) => {
+                const novoArray = [...valorAtual];
+                novoArray[index] = parseFloat(e.target.value) || 0;
+                atualizar(categoria, chave, novoArray);
+              }}
+            />
+          ))}
+      </div>
+    )
   }
   return (
     <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
@@ -37,7 +60,7 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
       <input
         type='number'
         step={passo}
-        value={config[categoria][chave]}
+        value={valorAtual}
         onChange={(e) => atualizar(categoria, chave, e.target.value)}
       />
     </div>
@@ -106,8 +129,8 @@ export default function App() {
         segmentosTronco: 7,
         copaMinEsferas: 3,
         copaMaxExtraEsferas: 3,
-        raioEsfera: 30.4,
-        raioEsferaRandExtra: 20.6,
+        raioEsfera: 30.0,
+        raioEsferaRandExtra: 20.0,
         segmentosEsfera: 8,
         espalhamentoCopa: 100.0,
         offsetYCopaRand: 0.6,
@@ -130,7 +153,7 @@ export default function App() {
       ...anterior,
       [categoria]: {
         ...anterior[categoria],
-        [chave]: parseFloat(valor) || 0
+        [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
       }
     }))
   }
@@ -140,7 +163,7 @@ export default function App() {
       ...anterior,
       [categoria]: {
         ...anterior[categoria],
-        [chave]: parseFloat(valor) || 0
+        [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
       }
     }))
   }
@@ -224,7 +247,7 @@ export default function App() {
           <div className='telaJogo__colunaMenuAtivo'>
             <div className='telaJogo__colunaMenuAtivo__inner'>
               {Object.entries(configTerreno).map(([categoria, propriedades]) => (
-                <div key={categoria} style={{ marginBottom: '15px' }}>
+                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria'>
                   <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
                     {categoria}
                   </div>

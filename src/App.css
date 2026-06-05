@@ -115,7 +115,6 @@
     transition: 0.3s all;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    
 }
 
 .telaJogo__colunaMenuAtivo__inner {
@@ -135,6 +134,13 @@
     font-weight: 550;
     transition: inherit;
     height: 100%;
+    overflow-y: auto;
+    gap: 2rem;
+}
+
+.telaJogo__colunaMenuAtivo__inner__categoria {
+    display: flex;
+    flex-direction: column;
 }
 
 .telaJogo__colunaMenuAtivo__inner__inputgroup {
