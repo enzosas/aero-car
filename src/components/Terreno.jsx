@@ -193,8 +193,8 @@ export const gerarUmaArvore = (id, arvoresparams) => {
         esfera.rotateZ(inclinacaoZ);
         geometriasCopa.push(esfera);
         if (i !== 0) {
-            const minBase = arvoresparams.galhoAlturaMinBase;
-            const randExtra = arvoresparams.galhoAlturaRandExtra;
+            const minBase = arvoresparams.galhoAlturaMinBaseRatio;
+            const randExtra = arvoresparams.galhoAlturaRatioRandExtra;
             const startY = (alturaTronco * minBase) + (Math.random() * (alturaTronco * randExtra));
             const start = new THREE.Vector3(0, startY, 0);
             const end = new THREE.Vector3(offsetX, offsetY, offsetZ);

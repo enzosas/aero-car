@@ -28,7 +28,7 @@ const geraCorCarro = (quantidade) => {
 
 function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
   let passo = 1
-  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa') || rotulo.toLowerCase().includes('fator') || rotulo.toLowerCase().includes('escala')) {
+  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa') || rotulo.toLowerCase().includes('fator') || rotulo.toLowerCase().includes('escala') || rotulo.toLowerCase().includes('ratio')) {
     passo = 0.1
   }
 
@@ -137,8 +137,8 @@ export default function App() {
         escalaCopaBase: [1.0, 0.6, 1.0],
         escalaCopaRand: [0.4, 0.3, 0.4],
         segmentosGalho: 5,
-        galhoAlturaMinBase: 0.3,
-        galhoAlturaRandExtra: 0.25, 
+        galhoAlturaMinBaseRatio: 0.3,
+        galhoAlturaRatioRandExtra: 0.25, 
         galhoRaioBaseRatio: 0.4,
         galhoRaioPontaRatio: 0.15
     }
