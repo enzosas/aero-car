@@ -2,11 +2,12 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-export const GramadoInstanced = ({ gramas }) => {
+export const GramadoInstanced = ({ gramas, config }) => {
+    config = config.grama;
     const meshRef = useRef()
     const dummy = useMemo(() => new THREE.Object3D(), [])
     const geometria = useMemo(() => {
-        const geo = new THREE.ConeGeometry(3.0, 10.0, 2)
+        const geo = new THREE.ConeGeometry(config.raio, config.altura, config.segmentos)
         geo.rotateY(Math.PI / 2);
         const normaisArray = new Float32Array(gramas.length * 3);
         gramas.forEach((grama, i) => {
@@ -21,7 +22,7 @@ export const GramadoInstanced = ({ gramas }) => {
     useFrame((state) => {
         if (!meshRef.current) return;
         gramas.forEach((grama, i) => {
-            const yAtual = grama.posicao.y + 5.0;
+            const yAtual = grama.posicao.y + config.altura / 2;
             dummy.position.set(grama.posicao.x, yAtual, grama.posicao.z)
             dummy.up.set(0, 1, 0);
             dummy.lookAt(

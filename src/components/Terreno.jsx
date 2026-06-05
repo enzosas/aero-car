@@ -9,96 +9,89 @@ export const TerrenoState = {
     pontostotal: 0
 }
 
-const bernstein = (i, t) => {
-    if (i === 0) return (1 - t) ** 3
-    if (i === 1) return 3 * t * ((1 - t) ** 2)
-    if (i === 2) return 3 * (t ** 2) * (1 - t)
-    if (i === 3) return t ** 3
-    return 0
-}
-
-const avaliarbezierpatch = (controlpoints, ptcontrole, patchi, patchj, u, v) => {
-    const res = new THREE.Vector3(0, 0, 0)
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            const idxi = patchi * 3 + i
-            const idxj = patchj * 3 + j
-            if (idxi < ptcontrole && idxj < ptcontrole) {
-                const bu = bernstein(i, u)
-                const bv = bernstein(j, v)
-                const cp = controlpoints[idxi][idxj]
-                if (cp) {
-                    res.add(new THREE.Vector3(
-                        cp.x * bu * bv,
-                        cp.y * bu * bv,
-                        cp.z * bu * bv
-                    ))
-                }
-            }
-        }
-    }
-    return res
-}
-
 const getPseudoRandom = (i, j) => {
     const dot = i * 12.9898 + j * 78.233;
     const sn = Math.sin(dot) * 43758.5453;
     return sn - Math.floor(sn);
 }
 
-export const atualizarMatrizTerreno = (params) => {
-    if (!params) return;
+const bsplineBase = (i, t) => {
+    if (i === 0) return (1.0 - t) ** 3 / 6.0;
+    if (i === 1) return (3.0 * t ** 3 - 6.0 * t ** 2 + 4.0) / 6.0;
+    if (i === 2) return (-3.0 * t ** 3 + 3.0 * t ** 2 + 3.0 * t + 1.0) / 6.0;
+    if (i === 3) return (t ** 3) / 6.0;
+    return 0;
+}
 
-    const ptcontrole = Math.max(4, Math.floor(params.ptcontrole))
-    const subdivisoes = Math.max(1, Math.floor(params.subdivisoes))
-    const espacamento = params.espacamento
-    const ondulacao = params.ondulacao
-    const fatorborda = params.fatorborda
-
-    TerrenoState.bboxmin = -(ptcontrole - 1) * espacamento / 2.0
-    TerrenoState.bboxmax = (ptcontrole - 1) * espacamento / 2.0
-
-    const numpatches = Math.floor((ptcontrole - 1) / 3)
-    TerrenoState.pontostotal = numpatches * subdivisoes + 1
-
-    const controlpoints = []
-    const offsetx = TerrenoState.bboxmin
-    const offsetz = TerrenoState.bboxmin
-
-    for (let i = 0; i < ptcontrole; i++) {
-        controlpoints[i] = []
-        for (let j = 0; j < ptcontrole; j++) {
-            const x = offsetx + i * espacamento
-            const z = offsetz + j * espacamento
-            let bordafactor = 1.0
-
-            if (i === 0 || i === ptcontrole - 1 || j === 0 || j === ptcontrole - 1) {
-                bordafactor = fatorborda
+const avaliarBsplinePatch = (controlpoints, pi, pj, u, v) => {
+    const res = new THREE.Vector3(0, 0, 0);
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            const bu = bsplineBase(i, u);
+            const bv = bsplineBase(j, v);
+            const cp = controlpoints[pi + i][pj + j];
+            if (cp) {
+                res.add(new THREE.Vector3(
+                    cp.x * bu * bv,
+                    cp.y * bu * bv,
+                    cp.z * bu * bv
+                ));
             }
-
-            const y = (getPseudoRandom(i, j) - 0.5) * ondulacao * bordafactor
-            controlpoints[i][j] = new THREE.Vector3(x, y, z)
         }
     }
+    return res;
+}
 
-    const novaMalha = []
+export const atualizarMatrizTerreno = (params) => {
+    if (!params) return;
+    const ptcontrole = Math.max(4, Math.floor(params.ptcontrole));
+    const subdivisoes = Math.max(1, Math.floor(params.subdivisoes));
+    const espacamento = params.espacamento;
+    const ondulacao = params.ondulacao;
+    const fatorborda = params.fatorborda;
+    const numpatches = ptcontrole - 3;
+    const numVertices = numpatches * subdivisoes + 1;
+    TerrenoState.pontostotal = numVertices;
+    const controlpoints = [];
+    const offsetx = -(ptcontrole - 1) * espacamento / 2.0;
+    const offsetz = -(ptcontrole - 1) * espacamento / 2.0;
+    for (let i = 0; i < ptcontrole; i++) {
+        controlpoints[i] = [];
+        for (let j = 0; j < ptcontrole; j++) {
+            const x = offsetx + i * espacamento;
+            const z = offsetz + j * espacamento;
+            let bordafactor = 1.0;
+            if (i < 2 || i >= ptcontrole - 2 || j < 2 || j >= ptcontrole - 2) {
+                bordafactor = fatorborda;
+            }
+            const y = (getPseudoRandom(i, j) - 0.5) * ondulacao * bordafactor;
+            controlpoints[i][j] = new THREE.Vector3(x, y, z);
+        }
+    }
+    const novaMalha = [];
+    for (let i = 0; i < numVertices; i++) {
+        novaMalha[i] = [];
+    }
     for (let pi = 0; pi < numpatches; pi++) {
         for (let pj = 0; pj < numpatches; pj++) {
             for (let si = 0; si <= subdivisoes; si++) {
                 for (let sj = 0; sj <= subdivisoes; sj++) {
-                    const u = si / subdivisoes
-                    const v = sj / subdivisoes
-                    const globali = pi * subdivisoes + si
-                    const globalj = pj * subdivisoes + sj
-
-                    if (!novaMalha[globali]) novaMalha[globali] = []
-                    novaMalha[globali][globalj] = avaliarbezierpatch(controlpoints, ptcontrole, pi, pj, u, v)
+                    const u = si / subdivisoes;
+                    const v = sj / subdivisoes;
+                    const globali = pi * subdivisoes + si;
+                    const globalj = pj * subdivisoes + sj;
+                    if (!novaMalha[globali][globalj]) {
+                        novaMalha[globali][globalj] = avaliarBsplinePatch(controlpoints, pi, pj, u, v);
+                    }
                 }
             }
         }
     }
-
     TerrenoState.malha = novaMalha;
+    if (novaMalha.length > 0 && novaMalha[0].length > 0) {
+        TerrenoState.bboxmin = novaMalha[0][0].x;
+        TerrenoState.bboxmax = novaMalha[numVertices - 1][numVertices - 1].x;
+    }
 }
 
 export const obteralturaterrenoem = (x, z) => {
@@ -258,9 +251,9 @@ export const ArvoreMesh = ({ arvore }) => {
     );
 }
 
-const gerarGramado = () => {
+const gerarGramado = (gramaparams) => {
     const gramas = [];
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < gramaparams.quantidade; i++) {
         const posicao = gerarPosicaoRandomTerreno();
         const normal = obternormalterrenoem(posicao.x, posicao.z);
         gramas.push({
@@ -272,11 +265,12 @@ const gerarGramado = () => {
     return gramas;
 }
 
-export default function Terreno({ config, arvconfig }) {
+export default function Terreno({ config, arvconfig, gramaconfig }) {
 
     const { geometria, arvoresGeradas, gramasGeradas } = useMemo(() => {
         const params = config?.parametros;
         const arvoreparams = arvconfig?.arvores;
+        const gramaparams = gramaconfig?.grama;
 
         if (params) {
             atualizarMatrizTerreno(params);
@@ -315,14 +309,14 @@ export default function Terreno({ config, arvconfig }) {
         }
 
         const arvores = arvoreparams ? gerarArvoresAleatorias(arvoreparams) : [];
-        const gramas = gerarGramado();
+        const gramas = gerarGramado(gramaparams);
 
         return {
             geometria: geo,
             arvoresGeradas: arvores,
             gramasGeradas: gramas
         };
-    }, [config, arvconfig]);
+    }, [config, arvconfig, gramaconfig]);
 
     return (
         <group>
@@ -337,7 +331,7 @@ export default function Terreno({ config, arvconfig }) {
             {arvoresGeradas.map((arvore) => (
                 <ArvoreMesh key={arvore.id} arvore={arvore} />
             ))}
-            <GramadoInstanced gramas={gramasGeradas} />
+            <GramadoInstanced gramas={gramasGeradas} config={gramaconfig} />
         </group>
     );
 }

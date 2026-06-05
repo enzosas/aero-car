@@ -157,9 +157,19 @@ export default function App() {
     }
   })
 
+  const [configGrama, setConfigGrama] = useState({
+    grama: {
+      quantidade: 10000,
+      altura: 6.0,
+      raio: 2.0,
+      segmentos: 2
+    }
+  })
+
   const atualizarConfig = criarAtualizador(setConfig)
   const atualizarConfigTerreno = criarAtualizador(setConfigTerreno)
   const atualizarConfigArvore = criarAtualizador(setConfigArvore)
+  const atualizarConfigGrama = criarAtualizador(setConfigGrama)
 
   const [carros, setCarros] = useState([
     { id: 1, matiz: 0.0, pos: [0, 0, 0] }
@@ -168,6 +178,7 @@ export default function App() {
   const [showConfigCarro, setShowConfigCarro] = useState(false)
   const [showConfigTerreno, setShowConfigTerreno] = useState(false)
   const [showConfigArvore, setShowConfigArvore] = useState(false)
+  const [showConfigGrama, setShowConfigGrama] = useState(false)
 
   const gerarCarro = () => {
     setCarros(antigos => {
@@ -215,6 +226,12 @@ export default function App() {
             <div className="inner">
               <div className="top-white"></div>
               <span className="text">arvore config</span>
+            </div>
+          </button>
+          <button onClick={() => setShowConfigGrama(!showConfigGrama)} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">grama config</span>
             </div>
           </button>
           <button onClick={gerarCarro} className="frutiger-button">
@@ -293,6 +310,29 @@ export default function App() {
             </div>
           </div>
         )}
+        {showConfigGrama && (
+          <div className='telaJogo__colunaMenuAtivo'>
+            <div className='telaJogo__colunaMenuAtivo__inner'>
+              {Object.entries(configGrama).map(([categoria, propriedades]) => (
+                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria'>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    {categoria}
+                  </div>
+                  {Object.keys(propriedades).map(chave => (
+                    <InputConfig
+                      key={`${categoria}-${chave}`}
+                      rotulo={chave}
+                      categoria={categoria}
+                      chave={chave}
+                      config={configGrama}
+                      atualizar={atualizarConfigGrama}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
@@ -310,7 +350,7 @@ export default function App() {
             />
           ))}
 
-          <Terreno config={configTerreno} arvconfig={configArvore}/>
+          <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama}/>
 
           <OrbitControls
             mouseButtons={{
