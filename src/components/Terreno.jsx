@@ -137,7 +137,7 @@ export const obteralturaterrenoem = (x, z) => {
 }
 
 export const obternormalterrenoem = (x, z) => {
-    const delta = 1.0
+    const delta = 0.1
     const h0 = obteralturaterrenoem(x, z)
     const hx = obteralturaterrenoem(x + delta, z)
     const hz = obteralturaterrenoem(x, z + delta)
@@ -148,7 +148,6 @@ export const obternormalterrenoem = (x, z) => {
     return new THREE.Vector3().crossVectors(tz, tx).normalize()
 }
 
-// 6. O Componente React
 export default function Terreno({ config }) {
     const geometria = useMemo(() => {
         const params = config?.parametros;

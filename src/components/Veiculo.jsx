@@ -127,14 +127,14 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config 
             const posx = chassiref.current.position.x
             const posz = chassiref.current.position.z
             const cima = obternormalterrenoem(posx, posz)
-            const direcaoplana = new THREE.Vector3(Math.sin(novarotacao), 0, Math.cos(novarotacao))
-            const direitavetor = new THREE.Vector3().crossVectors(cima, direcaoplana).normalize()
-            const frentevetor = new THREE.Vector3().crossVectors(direitavetor, cima).normalize()
-            frentevetor.multiplyScalar(velatual)
-            chassiref.current.position.add(frentevetor)
+            const rotacaoVolante = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), novarotacao)
+            const inclinacaoChao = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), cima)
+            const rotacaoFinal = new THREE.Quaternion().multiplyQuaternions(inclinacaoChao, rotacaoVolante)
+            const frentevetor = new THREE.Vector3(0, 0, 1).applyQuaternion(rotacaoFinal)
+            chassiref.current.position.x += frentevetor.x * velatual
+            chassiref.current.position.z += frentevetor.z * velatual
             chassiref.current.position.y = obteralturaterrenoem(chassiref.current.position.x, chassiref.current.position.z)
-            const matriz = new THREE.Matrix4().makeBasis(direitavetor, cima, frentevetor.normalize())
-            chassiref.current.quaternion.setFromRotationMatrix(matriz)
+            chassiref.current.quaternion.slerp(rotacaoFinal, 0.15)
         }
 
         if (rodaesqfrenteref.current && rodadirfrenteref.current) {
