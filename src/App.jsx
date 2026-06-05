@@ -127,7 +127,7 @@ export default function App() {
       fatorborda: 0.3
     },
     visualizacao: {
-      fatorOpacidade: 0.6,
+      fatorOpacidade: 1.0,
     }
   })
 

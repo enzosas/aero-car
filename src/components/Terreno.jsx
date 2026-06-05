@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
+import { GramadoInstanced } from './Grama'
 
 export const TerrenoState = {
     malha: [],
@@ -148,7 +149,7 @@ export const obternormalterrenoem = (x, z) => {
     return new THREE.Vector3().crossVectors(tz, tx).normalize()
 }
 
-export const gerarPosicaoArvore = () => {
+export const gerarPosicaoRandomTerreno = () => {
     const { bboxmin, bboxmax } = TerrenoState;
     if (bboxmin === bboxmax) return new THREE.Vector3(0, 0, 0);
     const x = bboxmin + Math.random() * (bboxmax - bboxmin);
@@ -157,7 +158,7 @@ export const gerarPosicaoArvore = () => {
     return new THREE.Vector3(x, y, z);
 }
 export const gerarUmaArvore = (id, arvoresparams) => {
-    const posicao = gerarPosicaoArvore();
+    const posicao = gerarPosicaoRandomTerreno();
     if (!posicao) return null;
     const alturaTronco = arvoresparams.alturaTronco + Math.random() * arvoresparams.alturaTroncoRandExtra;
     const raioTronco = arvoresparams.raioTronco + Math.random() * arvoresparams.raioTroncoRandExtra;
@@ -236,6 +237,7 @@ export const gerarArvoresAleatorias = (arvoresparams) => {
     return arvores;
 }
 
+
 export const ArvoreMesh = ({ arvore }) => {
     return (
         <group position={[arvore.posicao.x, arvore.posicao.y, arvore.posicao.z]}>
@@ -256,9 +258,23 @@ export const ArvoreMesh = ({ arvore }) => {
     );
 }
 
+const gerarGramado = () => {
+    const gramas = [];
+    for (let i = 0; i < 10000; i++) {
+        const posicao = gerarPosicaoRandomTerreno();
+        const normal = obternormalterrenoem(posicao.x, posicao.z);
+        gramas.push({
+            id: i,
+            posicao: posicao,
+            normal: normal
+        });
+    }
+    return gramas;
+}
+
 export default function Terreno({ config, arvconfig }) {
 
-    const { geometria, arvoresGeradas } = useMemo(() => {
+    const { geometria, arvoresGeradas, gramasGeradas } = useMemo(() => {
         const params = config?.parametros;
         const arvoreparams = arvconfig?.arvores;
 
@@ -299,10 +315,12 @@ export default function Terreno({ config, arvconfig }) {
         }
 
         const arvores = arvoreparams ? gerarArvoresAleatorias(arvoreparams) : [];
+        const gramas = gerarGramado();
 
         return {
             geometria: geo,
-            arvoresGeradas: arvores
+            arvoresGeradas: arvores,
+            gramasGeradas: gramas
         };
     }, [config, arvconfig]);
 
@@ -319,6 +337,7 @@ export default function Terreno({ config, arvconfig }) {
             {arvoresGeradas.map((arvore) => (
                 <ArvoreMesh key={arvore.id} arvore={arvore} />
             ))}
+            <GramadoInstanced gramas={gramasGeradas} />
         </group>
     );
 }
