@@ -95,6 +95,29 @@ export default function App() {
     },
     visualizacao: {
       fatorOpacidade: 0.6,
+    },
+    arvores: {
+        quantidade: 50,
+        alturaTronco: 40.0,
+        alturaTroncoRandExtra: 50.0,
+        raioTronco: 5.0,
+        raioTroncoRandExtra: 3.0,
+        inclinacaoMax: 0.15,
+        segmentosTronco: 7,
+        copaMinEsferas: 3,
+        copaMaxExtraEsferas: 3,
+        raioEsfera: 30.4,
+        raioEsferaRandExtra: 20.6,
+        segmentosEsfera: 8,
+        espalhamentoCopa: 100.0,
+        offsetYCopaRand: 0.6,
+        escalaCopaBase: [1.0, 0.6, 1.0],
+        escalaCopaRand: [0.4, 0.3, 0.4],
+        segmentosGalho: 5,
+        galhoAlturaMinBase: 0.3,
+        galhoAlturaRandExtra: 0.25, 
+        galhoRaioBaseRatio: 0.4,
+        galhoRaioPontaRatio: 0.15
     }
   })
 

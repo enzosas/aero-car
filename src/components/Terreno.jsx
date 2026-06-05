@@ -156,43 +156,53 @@ export const gerarPosicaoArvore = () => {
     const y = obteralturaterrenoem(x, z);
     return new THREE.Vector3(x, y, z);
 }
-
-export const gerarUmaArvore = (id) => {
+export const gerarUmaArvore = (id, arvoresparams) => {
     const posicao = gerarPosicaoArvore();
     if (!posicao) return null;
-    const alturaTronco = 40.0 + Math.random() * 50.0; 
-    const raioTronco = 5.0 + Math.random() * 3.0;
-    const inclinacaoX = (Math.random() - 0.5) * 0.15;
-    const inclinacaoZ = (Math.random() - 0.5) * 0.15;
-    const geometriaTronco = new THREE.CylinderGeometry(raioTronco * 0.7, raioTronco, alturaTronco, 7);
+    const alturaTronco = arvoresparams.alturaTronco + Math.random() * arvoresparams.alturaTroncoRandExtra;
+    const raioTronco = arvoresparams.raioTronco + Math.random() * arvoresparams.raioTroncoRandExtra;
+    const incMax = arvoresparams.inclinacaoMax;
+    const inclinacaoX = (Math.random() - 0.5) * incMax;
+    const inclinacaoZ = (Math.random() - 0.5) * incMax;
+    const segTronco = arvoresparams.segmentosTronco || 7;
+    const geometriaTronco = new THREE.CylinderGeometry(raioTronco * 0.7, raioTronco, alturaTronco, segTronco);
     geometriaTronco.translate(0, alturaTronco / 2, 0);
     geometriaTronco.rotateX(inclinacaoX);
     geometriaTronco.rotateZ(inclinacaoZ);
     const geometriasCopa = [];
     const geometriasGalho = [];
-    const numEsferas = 3 + Math.floor(Math.random() * 3);
+    const minEsferas = arvoresparams.copaMinEsferas;
+    const extraEsferas = arvoresparams.copaMaxExtraEsferas;
+    const numEsferas = minEsferas + Math.floor(Math.random() * (extraEsferas + 1));
     for (let i = 0; i < numEsferas; i++) {
-        const raioEsfera = 30.4 + Math.random() * 20.6;
-        const esfera = new THREE.SphereGeometry(raioEsfera, 8, 8);
-        const escalaX = 1.0 + Math.random() * 0.4;
-        const escalaY = 0.6 + Math.random() * 0.3;
-        const escalaZ = 1.0 + Math.random() * 0.4;
+        const raioEsfera = arvoresparams.raioEsfera + Math.random() * arvoresparams.raioEsferaRandExtra;
+        const segEsfera = arvoresparams.segmentosEsfera || 8;
+        const esfera = new THREE.SphereGeometry(raioEsfera, segEsfera, segEsfera);
+        const baseEscala = arvoresparams.escalaCopaBase;
+        const randEscala = arvoresparams.escalaCopaRand;
+        const escalaX = baseEscala[0] + Math.random() * randEscala[0];
+        const escalaY = baseEscala[1] + Math.random() * randEscala[1];
+        const escalaZ = baseEscala[2] + Math.random() * randEscala[2];
         esfera.scale(escalaX, escalaY, escalaZ);
-        const offsetX = i === 0 ? 0 : (Math.random() - 0.5) * 100;
-        const offsetZ = i === 0 ? 0 : (Math.random() - 0.5) * 100;
-        const offsetY = alturaTronco + (Math.random() * 0.6) + raioEsfera / 2;
+        const espalhamento = arvoresparams.espalhamentoCopa;
+        const offsetX = i === 0 ? 0 : (Math.random() - 0.5) * espalhamento;
+        const offsetZ = i === 0 ? 0 : (Math.random() - 0.5) * espalhamento;
+        const offsetY = alturaTronco + (Math.random() * arvoresparams.offsetYCopaRand) + raioEsfera / 2;
         esfera.translate(offsetX, offsetY, offsetZ);
         esfera.rotateX(inclinacaoX);
         esfera.rotateZ(inclinacaoZ);
         geometriasCopa.push(esfera);
         if (i !== 0) {
-            const startY = (alturaTronco * 0.3) + (Math.random() * (alturaTronco * 0.25));
+            const minBase = arvoresparams.galhoAlturaMinBase;
+            const randExtra = arvoresparams.galhoAlturaRandExtra;
+            const startY = (alturaTronco * minBase) + (Math.random() * (alturaTronco * randExtra));
             const start = new THREE.Vector3(0, startY, 0);
             const end = new THREE.Vector3(offsetX, offsetY, offsetZ);
             const distance = start.distanceTo(end);
-            const raioBaseGalho = raioTronco * 0.4;
-            const raioPontaGalho = raioTronco * 0.15;
-            const galho = new THREE.CylinderGeometry(raioPontaGalho, raioBaseGalho, distance, 5);
+            const raioBaseGalho = raioTronco * arvoresparams.galhoRaioBaseRatio;
+            const raioPontaGalho = raioTronco * arvoresparams.galhoRaioPontaRatio;
+            const segGalho = arvoresparams.segmentosGalho || 5;
+            const galho = new THREE.CylinderGeometry(raioPontaGalho, raioBaseGalho, distance, segGalho);
             const direction = new THREE.Vector3().subVectors(end, start).normalize();
             const up = new THREE.Vector3(0, 1, 0);
             const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
@@ -213,10 +223,12 @@ export const gerarUmaArvore = (id) => {
     };
 }
 
-export const gerarArvoresAleatorias = (quantidade) => {
+export const gerarArvoresAleatorias = (arvoresparams) => {
     const arvores = [];
-    for (let i = 0; i < quantidade; i++) {
-        const novaArvore = gerarUmaArvore(i);
+    if (!arvoresparams) return arvores;
+
+    for (let i = 0; i < arvoresparams.quantidade; i++) {
+        const novaArvore = gerarUmaArvore(i, arvoresparams);
         if (novaArvore) {
             arvores.push(novaArvore);
         }
@@ -248,6 +260,7 @@ export default function Terreno({ config }) {
 
     const { geometria, arvoresGeradas } = useMemo(() => {
         const params = config?.parametros;
+        const arvoreparams = config?.arvores;
 
         if (params) {
             atualizarMatrizTerreno(params);
@@ -285,8 +298,7 @@ export default function Terreno({ config }) {
             geo.computeVertexNormals();
         }
 
-        const quantidadeDeArvores = config?.parametros?.qtdArvores || 50;
-        const arvores = gerarArvoresAleatorias(quantidadeDeArvores);
+        const arvores = arvoreparams ? gerarArvoresAleatorias(arvoreparams) : [];
 
         return {
             geometria: geo,
