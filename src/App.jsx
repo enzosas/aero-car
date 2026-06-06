@@ -113,7 +113,7 @@ export default function App() {
       desaceleracao: 0.95,
       velmax: 1.0,
       velmin: -0.25,
-      velvolante: 0.02,
+      velvolante: 0.01,
       limitevolante: 0.7
     }
   })
@@ -122,8 +122,8 @@ export default function App() {
     parametros: {
       ptcontrole: 10,
       subdivisoes: 32,
-      espacamento: 140.0,
-      ondulacao: 140.0,
+      espacamento: 400.0,
+      ondulacao: 250.0,
       fatorborda: 0.3
     },
     visualizacao: {
