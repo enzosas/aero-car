@@ -1,6 +1,15 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
+import { useLoader, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { GramadoInstanced } from './Grama'
+import texturaTerrenoUrl from '../assets/texturagrama.png'
+import texturaarvore1 from '../assets/tree1.png'
+import texturaarvore2 from '../assets/tree2.png'
+import texturaarvore3 from '../assets/tree3.png'
+import texturaarvore4 from '../assets/tree4.png'
+import texturaarvore5 from '../assets/tree5.png'
+
+const imagensArvores = [texturaarvore1, texturaarvore2, texturaarvore3, texturaarvore4, texturaarvore5];
 
 export const TerrenoState = {
     malha: [],
@@ -150,70 +159,21 @@ export const gerarPosicaoRandomTerreno = () => {
     const y = obteralturaterrenoem(x, z);
     return new THREE.Vector3(x, y, z);
 }
+
 export const gerarUmaArvore = (id, arvoresparams) => {
     const posicao = gerarPosicaoRandomTerreno();
     if (!posicao) return null;
-    const alturaTronco = arvoresparams.alturaTronco + Math.random() * arvoresparams.alturaTroncoRandExtra;
-    const raioTronco = arvoresparams.raioTronco + Math.random() * arvoresparams.raioTroncoRandExtra;
-    const incMax = arvoresparams.inclinacaoMax;
-    const inclinacaoX = (Math.random() - 0.5) * incMax;
-    const inclinacaoZ = (Math.random() - 0.5) * incMax;
-    const segTronco = arvoresparams.segmentosTronco || 7;
-    const geometriaTronco = new THREE.CylinderGeometry(raioTronco * 0.7, raioTronco, alturaTronco, segTronco);
-    geometriaTronco.translate(0, alturaTronco / 2, 0);
-    geometriaTronco.rotateX(inclinacaoX);
-    geometriaTronco.rotateZ(inclinacaoZ);
-    const geometriasCopa = [];
-    const geometriasGalho = [];
-    const minEsferas = arvoresparams.copaMinEsferas;
-    const extraEsferas = arvoresparams.copaMaxExtraEsferas;
-    const numEsferas = minEsferas + Math.floor(Math.random() * (extraEsferas + 1));
-    for (let i = 0; i < numEsferas; i++) {
-        const raioEsfera = arvoresparams.raioEsfera + Math.random() * arvoresparams.raioEsferaRandExtra;
-        const segEsfera = arvoresparams.segmentosEsfera || 8;
-        const esfera = new THREE.SphereGeometry(raioEsfera, segEsfera, segEsfera);
-        const baseEscala = arvoresparams.escalaCopaBase;
-        const randEscala = arvoresparams.escalaCopaRand;
-        const escalaX = baseEscala[0] + Math.random() * randEscala[0];
-        const escalaY = baseEscala[1] + Math.random() * randEscala[1];
-        const escalaZ = baseEscala[2] + Math.random() * randEscala[2];
-        esfera.scale(escalaX, escalaY, escalaZ);
-        const espalhamento = arvoresparams.espalhamentoCopa;
-        const offsetX = i === 0 ? 0 : (Math.random() - 0.5) * espalhamento;
-        const offsetZ = i === 0 ? 0 : (Math.random() - 0.5) * espalhamento;
-        const offsetY = alturaTronco + (Math.random() * arvoresparams.offsetYCopaRand) + raioEsfera / 2;
-        esfera.translate(offsetX, offsetY, offsetZ);
-        esfera.rotateX(inclinacaoX);
-        esfera.rotateZ(inclinacaoZ);
-        geometriasCopa.push(esfera);
-        if (i !== 0) {
-            const minBase = arvoresparams.galhoAlturaMinBaseRatio;
-            const randExtra = arvoresparams.galhoAlturaRatioRandExtra;
-            const startY = (alturaTronco * minBase) + (Math.random() * (alturaTronco * randExtra));
-            const start = new THREE.Vector3(0, startY, 0);
-            const end = new THREE.Vector3(offsetX, offsetY, offsetZ);
-            const distance = start.distanceTo(end);
-            const raioBaseGalho = raioTronco * arvoresparams.galhoRaioBaseRatio;
-            const raioPontaGalho = raioTronco * arvoresparams.galhoRaioPontaRatio;
-            const segGalho = arvoresparams.segmentosGalho || 5;
-            const galho = new THREE.CylinderGeometry(raioPontaGalho, raioBaseGalho, distance, segGalho);
-            const direction = new THREE.Vector3().subVectors(end, start).normalize();
-            const up = new THREE.Vector3(0, 1, 0);
-            const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
-            galho.applyQuaternion(quaternion);
-            const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-            galho.translate(mid.x, mid.y, mid.z);
-            galho.rotateX(inclinacaoX);
-            galho.rotateZ(inclinacaoZ);
-            geometriasGalho.push(galho);
-        }
-    }
+
+    const tamanhoBase = arvoresparams.alturaTronco + arvoresparams.raioEsfera;
+    const tamanho = tamanhoBase + Math.random() * arvoresparams.alturaTroncoRandExtra;
+
+    const texturaIndex = Math.floor(Math.random() * 5);
+
     return {
         id: id,
         posicao: posicao,
-        geometriaTronco: geometriaTronco,
-        geometriasGalho: geometriasGalho,
-        geometriasCopa: geometriasCopa
+        tamanho: tamanho,
+        texturaIndex: texturaIndex
     };
 }
 
@@ -231,24 +191,59 @@ export const gerarArvoresAleatorias = (arvoresparams) => {
 }
 
 
-export const ArvoreMesh = ({ arvore }) => {
+const GrupoArvores = ({ textura, arvores }) => {
+    const meshRef1 = useRef()
+    const meshRef2 = useRef()
+    const dummy = useMemo(() => new THREE.Object3D(), [])
+    const geometriaBase = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
+
+    useEffect(() => {
+        if (!meshRef1.current || !meshRef2.current) return
+        arvores.forEach((arvore, i) => {
+            const yAtual = arvore.posicao.y + arvore.tamanho / 2
+            dummy.position.set(arvore.posicao.x, yAtual, arvore.posicao.z)
+            dummy.rotation.set(0, 0, 0)
+            dummy.scale.set(arvore.tamanho, arvore.tamanho, 1)
+            dummy.updateMatrix()
+            meshRef1.current.setMatrixAt(i, dummy.matrix)
+            dummy.rotation.set(0, Math.PI / 2, 0)
+            dummy.updateMatrix()
+            meshRef2.current.setMatrixAt(i, dummy.matrix)
+        })
+        meshRef1.current.instanceMatrix.needsUpdate = true
+        meshRef2.current.instanceMatrix.needsUpdate = true
+    }, [arvores, dummy])
+
+    if (arvores.length === 0) return null
+
     return (
-        <group position={[arvore.posicao.x, arvore.posicao.y, arvore.posicao.z]}>
-            <mesh geometry={arvore.geometriaTronco}>
-                <meshStandardMaterial color="#795c47" />
-            </mesh>
-            {arvore.geometriasGalho.map((geometriaGalho, index) => (
-                <mesh key={`galho-${index}`} geometry={geometriaGalho}>
-                    <meshStandardMaterial color="#795c47" />
-                </mesh>
-            ))}
-            {arvore.geometriasCopa.map((geometriaEsfera, index) => (
-                <mesh key={index} geometry={geometriaEsfera}>
-                    <meshStandardMaterial color="#baff4b" opacity={1} transparent={true} />
-                </mesh>
-            ))}
+        <group>
+            <instancedMesh ref={meshRef1} args={[geometriaBase, undefined, arvores.length]} frustumCulled={false}>
+                <meshBasicMaterial map={textura} color="white" alphaTest={0.5} side={THREE.DoubleSide} transparent={true} />
+            </instancedMesh>
+            <instancedMesh ref={meshRef2} args={[geometriaBase, undefined, arvores.length]} frustumCulled={false}>
+                <meshBasicMaterial map={textura} color="white" alphaTest={0.5} side={THREE.DoubleSide} transparent={true} />
+            </instancedMesh>
         </group>
-    );
+    )
+}
+
+export const ArvoresInstanced = ({ arvores, texturas }) => {
+    return (
+        <group>
+            {texturas.map((textura, index) => {
+                const arvoresDestaTextura = arvores.filter(a => a.texturaIndex === index)
+
+                return (
+                    <GrupoArvores
+                        key={`grupo-arvore-${index}`}
+                        textura={textura}
+                        arvores={arvoresDestaTextura}
+                    />
+                )
+            })}
+        </group>
+    )
 }
 
 const gerarGramado = (gramaparams) => {
@@ -267,6 +262,16 @@ const gerarGramado = (gramaparams) => {
 
 export default function Terreno({ config, arvconfig, gramaconfig }) {
 
+    const textura = useLoader(THREE.TextureLoader, texturaTerrenoUrl)
+    textura.wrapS = THREE.RepeatWrapping
+    textura.wrapT = THREE.RepeatWrapping
+    textura.colorSpace = THREE.SRGBColorSpace
+
+    const texturasArvores = useLoader(THREE.TextureLoader, imagensArvores)
+    texturasArvores.forEach(tex => {
+        tex.colorSpace = THREE.SRGBColorSpace
+    })
+
     const { geometria, arvoresGeradas, gramasGeradas } = useMemo(() => {
         const params = config?.parametros;
         const arvoreparams = arvconfig?.arvores;
@@ -277,17 +282,22 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
         }
 
         const vertices = [];
+        const uvs = [];
 
-        const addquad = (p1, p2, p3, p4) => {
+        const addquad = (p1, p2, p3, p4, uv1, uv2, uv3, uv4) => {
             if (!p1 || !p2 || !p3 || !p4) return;
             vertices.push(p1.x, p1.y, p1.z);
             vertices.push(p2.x, p2.y, p2.z);
             vertices.push(p3.x, p3.y, p3.z);
+            uvs.push(uv1.u, uv1.v, uv2.u, uv2.v, uv3.u, uv3.v);
 
             vertices.push(p1.x, p1.y, p1.z);
             vertices.push(p3.x, p3.y, p3.z);
             vertices.push(p4.x, p4.y, p4.z);
+            uvs.push(uv1.u, uv1.v, uv3.u, uv3.v, uv4.u, uv4.v);
         };
+
+        const repeticoesTex = 200.0;
 
         for (let i = 0; i < TerrenoState.pontostotal - 1; i++) {
             for (let j = 0; j < TerrenoState.pontostotal - 1; j++) {
@@ -297,7 +307,12 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
                     const v01 = TerrenoState.malha[i][j + 1];
                     const v11 = TerrenoState.malha[i + 1][j + 1];
 
-                    addquad(v00, v10, v11, v01);
+                    const uv00 = { u: (i / TerrenoState.pontostotal) * repeticoesTex, v: (j / TerrenoState.pontostotal) * repeticoesTex };
+                    const uv10 = { u: ((i + 1) / TerrenoState.pontostotal) * repeticoesTex, v: (j / TerrenoState.pontostotal) * repeticoesTex };
+                    const uv01 = { u: (i / TerrenoState.pontostotal) * repeticoesTex, v: ((j + 1) / TerrenoState.pontostotal) * repeticoesTex };
+                    const uv11 = { u: ((i + 1) / TerrenoState.pontostotal) * repeticoesTex, v: ((j + 1) / TerrenoState.pontostotal) * repeticoesTex };
+
+                    addquad(v00, v10, v11, v01, uv00, uv10, uv11, uv01);
                 }
             }
         }
@@ -305,6 +320,7 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
         const geo = new THREE.BufferGeometry();
         if (vertices.length > 0) {
             geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+            geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
             geo.computeVertexNormals();
         }
 
@@ -321,17 +337,18 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
     return (
         <group>
             <mesh geometry={geometria}>
-                <meshStandardMaterial
-                    color="#baff4b"
+                <meshBasicMaterial
+                    map={textura}
+                    color="white"
                     side={THREE.DoubleSide}
                     opacity={config?.visualizacao?.fatorOpacidade || 1}
                     transparent={true}
                 />
             </mesh>
-            {arvoresGeradas.map((arvore) => (
-                <ArvoreMesh key={arvore.id} arvore={arvore} />
-            ))}
-            <GramadoInstanced gramas={gramasGeradas} config={gramaconfig} />
+            <ArvoresInstanced
+                arvores={arvoresGeradas}
+                texturas={texturasArvores}
+            />
         </group>
     );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, KeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -122,8 +122,8 @@ export default function App() {
     parametros: {
       ptcontrole: 10,
       subdivisoes: 32,
-      espacamento: 400.0,
-      ondulacao: 250.0,
+      espacamento: 1000.0,
+      ondulacao: 1000.0,
       fatorborda: 0.3
     },
     visualizacao: {
@@ -133,8 +133,8 @@ export default function App() {
 
   const [configArvore, setConfigArvore] = useState({
     arvores: {
-      quantidade: 50,
-      alturaTronco: 40.0,
+      quantidade: 1000,
+      alturaTronco: 100.0,
       alturaTroncoRandExtra: 50.0,
       raioTronco: 5.0,
       raioTroncoRandExtra: 3.0,
@@ -345,7 +345,7 @@ export default function App() {
 
       <div style={{ width: '100vw', height: '100vh', margin: 0, overflow: 'hidden' }}>
         <Canvas camera={{ position: [-400, 120, 400], fov: 60, near: 0.1, far: 15000 }}>
-          <color attach="background" args={['#87ceeb']} />
+          <FundoImagem />
           <ambientLight intensity={0.5} />
           <directionalLight position={[100, 200, 100]} />
 
@@ -359,7 +359,9 @@ export default function App() {
             />
           ))}
 
-          <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama}/>
+          <Suspense fallback={null}>
+            <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama} />
+          </Suspense>
 
           <OrbitControls
             makeDefault
