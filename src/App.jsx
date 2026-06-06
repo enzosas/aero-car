@@ -180,6 +180,8 @@ export default function App() {
   const [showConfigArvore, setShowConfigArvore] = useState(false)
   const [showConfigGrama, setShowConfigGrama] = useState(false)
 
+  const [cameraLivre, setCameraLivre] = useState(false)
+
   const gerarCarro = () => {
     setCarros(antigos => {
       const quantidade = antigos.length
@@ -238,6 +240,12 @@ export default function App() {
             <div className="inner">
               <div className="top-white"></div>
               <span className="text">gerar carro</span>
+            </div>
+          </button>
+          <button onClick={() => setCameraLivre(!cameraLivre)} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">{cameraLivre ? 'seguir carro' : 'câmera livre'}</span>
             </div>
           </button>
         </div>
@@ -347,14 +355,17 @@ export default function App() {
               matiz={carro.matiz}
               posicaoInicial={carro.pos}
               config={config}
+              segueCamera={!cameraLivre && carro.id === 1}
             />
           ))}
 
           <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama}/>
 
           <OrbitControls
+            makeDefault
+            enablePan={cameraLivre}
             mouseButtons={{
-              LEFT: THREE.MOUSE.PAN,
+              LEFT: cameraLivre ? THREE.MOUSE.PAN : null,
               RIGHT: THREE.MOUSE.ROTATE
             }}
             screenSpacePanning={false}

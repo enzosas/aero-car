@@ -80,7 +80,7 @@ function Chassi({ matiz, dimensoes }) {
     )
 }
 
-export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config }) {
+export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config, segueCamera = false }) {
     const chassiref = useRef()
     const rodaesqfrenteref = useRef()
     const rodadirfrenteref = useRef()
@@ -90,7 +90,9 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config 
     const [angulovolante, setangulovolante] = useState(0)
     const [rotacaocarro, setrotacaocarro] = useState(0)
 
-    useFrame(() => {
+    const posAnterior = useRef(new THREE.Vector3(...posicaoInicial))
+
+    useFrame((state) => {
         const { frente, tras, esquerda, direita } = get()
 
         let velatual = velocidade
@@ -135,6 +137,16 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config 
             chassiref.current.position.z += frentevetor.z * velatual
             chassiref.current.position.y = obteralturaterrenoem(chassiref.current.position.x, chassiref.current.position.z)
             chassiref.current.quaternion.slerp(rotacaoFinal, 0.15)
+
+            if (segueCamera && state.controls) {
+                const alturaDaCamera = new THREE.Vector3(0, config.dimensoes.alturachao + config.dimensoes.alturaporta + config.dimensoes.alturaparabrisa)
+                const alvocamera = chassiref.current.position.clone().add(alturaDaCamera)
+                const deltaMove = new THREE.Vector3().subVectors(chassiref.current.position, posAnterior.current)
+                state.camera.position.add(deltaMove)
+                state.controls.target.copy(alvocamera)
+                state.controls.update()
+            }
+            posAnterior.current.copy(chassiref.current.position)
         }
 
         if (rodaesqfrenteref.current && rodadirfrenteref.current) {
