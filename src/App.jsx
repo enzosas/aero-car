@@ -159,27 +159,38 @@ export default function App() {
 
   const [configGrama, setConfigGrama] = useState({
     grama: {
-      quantidade: 10000,
-      altura: 6.0,
-      raio: 2.0,
+      quantidade: 100000,
+      altura: 16.0,
+      raio: 22.0,
       segmentos: 2
     }
   })
 
+  const [configMoita, setConfigMoita] = useState({
+    moita: {
+      quantidade: 2000,
+      altura: 40.0,
+      raio: 30.0
+    }
+  })
+
+  
   const atualizarConfig = criarAtualizador(setConfig)
   const atualizarConfigTerreno = criarAtualizador(setConfigTerreno)
   const atualizarConfigArvore = criarAtualizador(setConfigArvore)
   const atualizarConfigGrama = criarAtualizador(setConfigGrama)
-
+  const atualizarConfigMoita = criarAtualizador(setConfigMoita)
+  
   const [carros, setCarros] = useState([
     { id: 1, matiz: 0.0, pos: [0, 0, 0] }
   ])
-
+  
   const [showConfigCarro, setShowConfigCarro] = useState(false)
   const [showConfigTerreno, setShowConfigTerreno] = useState(false)
   const [showConfigArvore, setShowConfigArvore] = useState(false)
   const [showConfigGrama, setShowConfigGrama] = useState(false)
-
+  const [showConfigMoita, setShowConfigMoita] = useState(false)
+  
   const [cameraLivre, setCameraLivre] = useState(false)
 
   const gerarCarro = () => {
@@ -360,7 +371,7 @@ export default function App() {
           ))}
 
           <Suspense fallback={null}>
-            <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama} />
+            <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama} moitaconfig={configMoita} />
           </Suspense>
 
           <OrbitControls

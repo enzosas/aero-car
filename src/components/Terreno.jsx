@@ -1,13 +1,14 @@
 import { useMemo, useRef, useEffect } from 'react'
 import { useLoader, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { GramadoInstanced } from './Grama'
 import texturaTerrenoUrl from '../assets/texturagrama.png'
+import texturaGramaUrl from '../assets/grama.png'
 import texturaarvore1 from '../assets/tree1.png'
 import texturaarvore2 from '../assets/tree2.png'
 import texturaarvore3 from '../assets/tree3.png'
 import texturaarvore4 from '../assets/tree4.png'
 import texturaarvore5 from '../assets/tree5.png'
+import texturaMoitaUrl from '../assets/moita.png'
 
 const imagensArvores = [texturaarvore1, texturaarvore2, texturaarvore3, texturaarvore4, texturaarvore5];
 
@@ -246,6 +247,71 @@ export const ArvoresInstanced = ({ arvores, texturas }) => {
     )
 }
 
+export const GramadoInstanced = ({ gramas, textura, gramaconfig }) => {
+    const meshRef1 = useRef()
+    const meshRef2 = useRef()
+    const dummy = useMemo(() => new THREE.Object3D(), [])
+    const geometriaBase = useMemo(() => {
+        const geo = new THREE.PlaneGeometry(1, 1)
+        geo.translate(0, 0.5, 0)
+        return geo
+    }, [])
+    const up = useMemo(() => new THREE.Vector3(0, 1, 0), [])
+    const qNormal = useMemo(() => new THREE.Quaternion(), [])
+    const qRot = useMemo(() => new THREE.Quaternion(), [])
+
+    useEffect(() => {
+        if (!meshRef1.current || !meshRef2.current) return
+
+        const alturaBase = gramaconfig?.grama?.altura || 6.0
+        const larguraBase = (gramaconfig?.grama?.raio || 2.0) * 2
+
+        gramas.forEach((grama, i) => {
+            const fatorDispersao = getPseudoRandom(grama.posicao.x, grama.posicao.z)
+            const escalaAleatoria = 0.6 + fatorDispersao * 0.8
+
+            const largura = larguraBase * escalaAleatoria
+            const altura = alturaBase * escalaAleatoria
+
+            dummy.position.set(grama.posicao.x, grama.posicao.y, grama.posicao.z)
+
+            const rotacaoAleatoria = fatorDispersao * Math.PI
+
+            if (grama.normal) {
+                qNormal.setFromUnitVectors(up, grama.normal)
+
+                qRot.setFromAxisAngle(up, rotacaoAleatoria)
+                dummy.quaternion.copy(qNormal).multiply(qRot)
+                dummy.scale.set(largura, altura, 1)
+                dummy.updateMatrix()
+                meshRef1.current.setMatrixAt(i, dummy.matrix)
+
+                qRot.setFromAxisAngle(up, rotacaoAleatoria + Math.PI / 2)
+                dummy.quaternion.copy(qNormal).multiply(qRot)
+                dummy.scale.set(largura, altura, 1)
+                dummy.updateMatrix()
+                meshRef2.current.setMatrixAt(i, dummy.matrix)
+            }
+        })
+
+        meshRef1.current.instanceMatrix.needsUpdate = true
+        meshRef2.current.instanceMatrix.needsUpdate = true
+    }, [gramas, gramaconfig, dummy, up, qNormal, qRot])
+
+    if (gramas.length === 0) return null
+
+    return (
+        <group>
+            <instancedMesh ref={meshRef1} args={[geometriaBase, undefined, gramas.length]} frustumCulled={false}>
+                <meshBasicMaterial map={textura} color="white" alphaTest={0.5} side={THREE.DoubleSide} transparent={true} />
+            </instancedMesh>
+            <instancedMesh ref={meshRef2} args={[geometriaBase, undefined, gramas.length]} frustumCulled={false}>
+                <meshBasicMaterial map={textura} color="white" alphaTest={0.5} side={THREE.DoubleSide} transparent={true} />
+            </instancedMesh>
+        </group>
+    )
+}
+
 const gerarGramado = (gramaparams) => {
     const gramas = [];
     for (let i = 0; i < gramaparams.quantidade; i++) {
@@ -260,7 +326,87 @@ const gerarGramado = (gramaparams) => {
     return gramas;
 }
 
-export default function Terreno({ config, arvconfig, gramaconfig }) {
+export const MoitasInstanced = ({ moitas, textura, moitaconfig }) => {
+    const meshRef1 = useRef()
+    const meshRef2 = useRef()
+    const dummy = useMemo(() => new THREE.Object3D(), [])
+    const geometriaBase = useMemo(() => {
+        const geo = new THREE.PlaneGeometry(1, 1)
+        geo.translate(0, 0.5, 0)
+        return geo
+    }, [])
+    const up = useMemo(() => new THREE.Vector3(0, 1, 0), [])
+    const qNormal = useMemo(() => new THREE.Quaternion(), [])
+    const qRot = useMemo(() => new THREE.Quaternion(), [])
+
+    useEffect(() => {
+        if (!meshRef1.current || !meshRef2.current) return
+
+        const alturaBase = moitaconfig?.moita?.altura || 12.0
+        const larguraBase = (moitaconfig?.moita?.raio || 6.0) * 2
+
+        moitas.forEach((moita, i) => {
+            const fatorDispersao = getPseudoRandom(moita.posicao.x, moita.posicao.z)
+            const escalaAleatoria = 0.6 + fatorDispersao * 0.8
+
+            const largura = larguraBase * escalaAleatoria
+            const altura = alturaBase * escalaAleatoria
+
+            dummy.position.set(moita.posicao.x, moita.posicao.y, moita.posicao.z)
+
+            const rotacaoAleatoria = fatorDispersao * Math.PI
+
+            if (moita.normal) {
+                qNormal.setFromUnitVectors(up, moita.normal)
+
+                qRot.setFromAxisAngle(up, rotacaoAleatoria)
+                dummy.quaternion.copy(qNormal).multiply(qRot)
+                dummy.scale.set(largura, altura, 1)
+                dummy.updateMatrix()
+                meshRef1.current.setMatrixAt(i, dummy.matrix)
+
+                qRot.setFromAxisAngle(up, rotacaoAleatoria + Math.PI / 2)
+                dummy.quaternion.copy(qNormal).multiply(qRot)
+                dummy.scale.set(largura, altura, 1)
+                dummy.updateMatrix()
+                meshRef2.current.setMatrixAt(i, dummy.matrix)
+            }
+        })
+
+        meshRef1.current.instanceMatrix.needsUpdate = true
+        meshRef2.current.instanceMatrix.needsUpdate = true
+    }, [moitas, moitaconfig, dummy, up, qNormal, qRot])
+
+    if (moitas.length === 0) return null
+
+    return (
+        <group>
+            <instancedMesh ref={meshRef1} args={[geometriaBase, undefined, moitas.length]} frustumCulled={false}>
+                <meshBasicMaterial map={textura} color="white" alphaTest={0.5} side={THREE.DoubleSide} transparent={true} />
+            </instancedMesh>
+            <instancedMesh ref={meshRef2} args={[geometriaBase, undefined, moitas.length]} frustumCulled={false}>
+                <meshBasicMaterial map={textura} color="white" alphaTest={0.5} side={THREE.DoubleSide} transparent={true} />
+            </instancedMesh>
+        </group>
+    )
+}
+
+const gerarMoitas = (moitaparams) => {
+    const moitas = [];
+    if (!moitaparams) return moitas;
+    for (let i = 0; i < moitaparams.quantidade; i++) {
+        const posicao = gerarPosicaoRandomTerreno();
+        const normal = obternormalterrenoem(posicao.x, posicao.z);
+        moitas.push({
+            id: i,
+            posicao: posicao,
+            normal: normal
+        });
+    }
+    return moitas;
+}
+
+export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig }) {
 
     const textura = useLoader(THREE.TextureLoader, texturaTerrenoUrl)
     textura.wrapS = THREE.RepeatWrapping
@@ -271,11 +417,18 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
     texturasArvores.forEach(tex => {
         tex.colorSpace = THREE.SRGBColorSpace
     })
+    
+    const texturaGrama = useLoader(THREE.TextureLoader, texturaGramaUrl)
+    texturaGrama.colorSpace = THREE.SRGBColorSpace
 
-    const { geometria, arvoresGeradas, gramasGeradas } = useMemo(() => {
+    const texturaMoita = useLoader(THREE.TextureLoader, texturaMoitaUrl)
+    texturaMoita.colorSpace = THREE.SRGBColorSpace
+
+    const { geometria, arvoresGeradas, gramasGeradas, moitasGeradas } = useMemo(() => {
         const params = config?.parametros;
         const arvoreparams = arvconfig?.arvores;
         const gramaparams = gramaconfig?.grama;
+        const moitaparams = moitaconfig?.moita;
 
         if (params) {
             atualizarMatrizTerreno(params);
@@ -326,13 +479,15 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
 
         const arvores = arvoreparams ? gerarArvoresAleatorias(arvoreparams) : [];
         const gramas = gerarGramado(gramaparams);
+        const moitas = gerarMoitas(moitaparams);
 
         return {
             geometria: geo,
             arvoresGeradas: arvores,
-            gramasGeradas: gramas
+            gramasGeradas: gramas,
+            moitasGeradas: moitas
         };
-    }, [config, arvconfig, gramaconfig]);
+    }, [config, arvconfig, gramaconfig, moitaconfig]);
 
     return (
         <group>
@@ -348,6 +503,16 @@ export default function Terreno({ config, arvconfig, gramaconfig }) {
             <ArvoresInstanced
                 arvores={arvoresGeradas}
                 texturas={texturasArvores}
+            />
+            <GramadoInstanced
+                gramas={gramasGeradas}
+                textura={texturaGrama}
+                gramaconfig={gramaconfig}
+            />
+            <MoitasInstanced
+                moitas={moitasGeradas}
+                textura={texturaMoita}
+                moitaconfig={moitaconfig}
             />
         </group>
     );
