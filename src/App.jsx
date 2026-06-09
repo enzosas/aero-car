@@ -38,19 +38,19 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
     return (
       <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
         <label>{rotulo} (x, y, z)</label>
-          {valorAtual.map((v, index) => (
-            <input
-              key={index}
-              type='number'
-              step={passo}
-              value={v}
-              onChange={(e) => {
-                const novoArray = [...valorAtual];
-                novoArray[index] = parseFloat(e.target.value) || 0;
-                atualizar(categoria, chave, novoArray);
-              }}
-            />
-          ))}
+        {valorAtual.map((v, index) => (
+          <input
+            key={index}
+            type='number'
+            step={passo}
+            value={v}
+            onChange={(e) => {
+              const novoArray = [...valorAtual];
+              novoArray[index] = parseFloat(e.target.value) || 0;
+              atualizar(categoria, chave, novoArray);
+            }}
+          />
+        ))}
       </div>
     )
   }
@@ -78,120 +78,118 @@ function FundoImagem() {
   return <primitive attach="background" object={textura} />
 }
 
-const criarAtualizador = (setEstado) => (categoria, chave, valor) => {
-  setEstado(anterior => ({
-    ...anterior,
-    [categoria]: {
-      ...anterior[categoria],
-      [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
-    }
-  }))
-}
-
 export default function App() {
 
   const [config, setConfig] = useState({
-    dimensoes: {
-      largura: 10.0,
-      comprimento: 20.0,
-      alturachao: 2.0,
-      alturaporta: 4.5,
-      alturaparabrisa: 4.5,
-      comprimentorodas: 13.0,
-      taxaBaseCockpitTras: 0.1,
-      taxaTopoCockpitTras: 0.2,
-      taxaTopoCockpitFrente: 0.6,
-      taxaBaseCockpitFrente: 0.7
+    carro: {
+      dimensoes: {
+        largura: 10.0,
+        comprimento: 20.0,
+        alturachao: 2.0,
+        alturaporta: 4.5,
+        alturaparabrisa: 4.5,
+        comprimentorodas: 13.0,
+        taxaBaseCockpitTras: 0.1,
+        taxaTopoCockpitTras: 0.2,
+        taxaTopoCockpitFrente: 0.6,
+        taxaBaseCockpitFrente: 0.7
+      },
+      rodas: {
+        raio: 2.0,
+        largura: 1.5,
+        segmentos: 16
+      },
+      fisica: {
+        aceleracao: 0.01,
+        desaceleracao: 0.95,
+        velmax: 1.0,
+        velmin: -0.25,
+        velvolante: 0.01,
+        limitevolante: 0.7
+      }
     },
-    rodas: {
-      raio: 2.0,
-      largura: 1.5,
-      segmentos: 16
+    terreno: {
+      parametros: {
+        ptcontrole: 10,
+        subdivisoes: 32,
+        espacamento: 1000.0,
+        ondulacao: 1000.0,
+        fatorborda: 0.3
+      },
+      visualizacao: {
+        fatorOpacidade: 1.0,
+      }
     },
-    fisica: {
-      aceleracao: 0.01,
-      desaceleracao: 0.95,
-      velmax: 1.0,
-      velmin: -0.25,
-      velvolante: 0.01,
-      limitevolante: 0.7
-    }
-  })
-
-  const [configTerreno, setConfigTerreno] = useState({
-    parametros: {
-      ptcontrole: 10,
-      subdivisoes: 32,
-      espacamento: 1000.0,
-      ondulacao: 1000.0,
-      fatorborda: 0.3
+    arvore: {
+      arvores: {
+        quantidade: 1000,
+        alturaTronco: 100.0,
+        alturaTroncoRandExtra: 50.0,
+        raioTronco: 5.0,
+        raioTroncoRandExtra: 3.0,
+        inclinacaoMax: 0.15,
+        segmentosTronco: 7,
+        copaMinEsferas: 3,
+        copaMaxExtraEsferas: 3,
+        raioEsfera: 30.0,
+        raioEsferaRandExtra: 20.0,
+        segmentosEsfera: 8,
+        espalhamentoCopa: 100.0,
+        offsetYCopaRand: 0.6,
+        escalaCopaBase: [1.0, 0.6, 1.0],
+        escalaCopaRand: [0.4, 0.3, 0.4],
+        segmentosGalho: 5,
+        galhoAlturaMinBaseRatio: 0.3,
+        galhoAlturaRatioRandExtra: 0.25,
+        galhoRaioBaseRatio: 0.4,
+        galhoRaioPontaRatio: 0.15,
+        distanciaEstrada: 20.0,
+      }
     },
-    visualizacao: {
-      fatorOpacidade: 1.0,
-    }
-  })
-
-  const [configArvore, setConfigArvore] = useState({
-    arvores: {
-      quantidade: 1000,
-      alturaTronco: 100.0,
-      alturaTroncoRandExtra: 50.0,
-      raioTronco: 5.0,
-      raioTroncoRandExtra: 3.0,
-      inclinacaoMax: 0.15,
-      segmentosTronco: 7,
-      copaMinEsferas: 3,
-      copaMaxExtraEsferas: 3,
-      raioEsfera: 30.0,
-      raioEsferaRandExtra: 20.0,
-      segmentosEsfera: 8,
-      espalhamentoCopa: 100.0,
-      offsetYCopaRand: 0.6,
-      escalaCopaBase: [1.0, 0.6, 1.0],
-      escalaCopaRand: [0.4, 0.3, 0.4],
-      segmentosGalho: 5,
-      galhoAlturaMinBaseRatio: 0.3,
-      galhoAlturaRatioRandExtra: 0.25,
-      galhoRaioBaseRatio: 0.4,
-      galhoRaioPontaRatio: 0.15
-    }
-  })
-
-  const [configGrama, setConfigGrama] = useState({
     grama: {
-      quantidade: 100000,
-      altura: 16.0,
-      raio: 22.0,
-      segmentos: 2
-    }
-  })
-
-  const [configMoita, setConfigMoita] = useState({
+      grama: {
+        quantidade: 100000,
+        altura: 16.0,
+        raio: 22.0,
+        segmentos: 2,
+        distanciaEstrada: 30.0,
+      }
+    },
     moita: {
-      quantidade: 2000,
-      altura: 40.0,
-      raio: 30.0
+      moita: {
+        quantidade: 2000,
+        altura: 40.0,
+        raio: 30.0,
+        distanciaEstrada: 50.0,
+      }
+    },
+    estrada: {
+      estrada: {
+        largura: 30.0,
+      }
     }
   })
 
-  
-  const atualizarConfig = criarAtualizador(setConfig)
-  const atualizarConfigTerreno = criarAtualizador(setConfigTerreno)
-  const atualizarConfigArvore = criarAtualizador(setConfigArvore)
-  const atualizarConfigGrama = criarAtualizador(setConfigGrama)
-  const atualizarConfigMoita = criarAtualizador(setConfigMoita)
-  
+  const [abaAtiva, setAbaAtiva] = useState(null)
+
   const [carros, setCarros] = useState([
     { id: 1, matiz: 0.0, pos: [0, 0, 0] }
   ])
-  
-  const [showConfigCarro, setShowConfigCarro] = useState(false)
-  const [showConfigTerreno, setShowConfigTerreno] = useState(false)
-  const [showConfigArvore, setShowConfigArvore] = useState(false)
-  const [showConfigGrama, setShowConfigGrama] = useState(false)
-  const [showConfigMoita, setShowConfigMoita] = useState(false)
-  
+
   const [cameraLivre, setCameraLivre] = useState(false)
+
+  const atualizarConfigGeral = (aba, categoria, chave, valor) => {
+    setConfig(prev => ({
+      ...prev,
+      [aba]: {
+        ...prev[aba],
+        [categoria]: {
+          ...prev[aba][categoria],
+          [chave]: Array.isArray(valor) ? valor : parseFloat(valor) || 0
+        }
+      }
+    }))
+  }
 
   const gerarCarro = () => {
     setCarros(antigos => {
@@ -222,37 +220,28 @@ export default function App() {
   return (
     <KeyboardControls map={teclas}>
       <div className='telaJogo'>
+
         <div className='telaJogo__colunaMenu'>
-          <button onClick={() => setShowConfigCarro(!showConfigCarro)} className="frutiger-button">
-            <div className="inner">
-              <div className="top-white"></div>
-              <span className="text">carro config</span>
-            </div>
-          </button>
-          <button onClick={() => setShowConfigTerreno(!showConfigTerreno)} className="frutiger-button">
-            <div className="inner">
-              <div className="top-white"></div>
-              <span className="text">terreno config</span>
-            </div>
-          </button>
-          <button onClick={() => setShowConfigArvore(!showConfigArvore)} className="frutiger-button">
-            <div className="inner">
-              <div className="top-white"></div>
-              <span className="text">arvore config</span>
-            </div>
-          </button>
-          <button onClick={() => setShowConfigGrama(!showConfigGrama)} className="frutiger-button">
-            <div className="inner">
-              <div className="top-white"></div>
-              <span className="text">grama config</span>
-            </div>
-          </button>
+          {Object.keys(config).map(aba => (
+            <button
+              key={aba}
+              onClick={() => setAbaAtiva(abaAtiva === aba ? null : aba)}
+              className="frutiger-button"
+            >
+              <div className="inner">
+                <div className="top-white"></div>
+                <span className="text">{aba} config</span>
+              </div>
+            </button>
+          ))}
+
           <button onClick={gerarCarro} className="frutiger-button">
             <div className="inner">
               <div className="top-white"></div>
               <span className="text">gerar carro</span>
             </div>
           </button>
+
           <button onClick={() => setCameraLivre(!cameraLivre)} className="frutiger-button">
             <div className="inner">
               <div className="top-white"></div>
@@ -260,11 +249,12 @@ export default function App() {
             </div>
           </button>
         </div>
-        {showConfigCarro && (
+
+        {abaAtiva && (
           <div className='telaJogo__colunaMenuAtivo'>
             <div className='telaJogo__colunaMenuAtivo__inner'>
-              {Object.entries(config).map(([categoria, propriedades]) => (
-                <div key={categoria} style={{ marginBottom: '15px' }}>
+              {Object.entries(config[abaAtiva]).map(([categoria, propriedades]) => (
+                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria' style={{ marginBottom: '15px' }}>
                   <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
                     {categoria}
                   </div>
@@ -274,77 +264,8 @@ export default function App() {
                       rotulo={chave}
                       categoria={categoria}
                       chave={chave}
-                      config={config}
-                      atualizar={atualizarConfig}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {showConfigTerreno && (
-          <div className='telaJogo__colunaMenuAtivo'>
-            <div className='telaJogo__colunaMenuAtivo__inner'>
-              {Object.entries(configTerreno).map(([categoria, propriedades]) => (
-                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria'>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                    {categoria}
-                  </div>
-                  {Object.keys(propriedades).map(chave => (
-                    <InputConfig
-                      key={`${categoria}-${chave}`}
-                      rotulo={chave}
-                      categoria={categoria}
-                      chave={chave}
-                      config={configTerreno}
-                      atualizar={atualizarConfigTerreno}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {showConfigArvore && (
-          <div className='telaJogo__colunaMenuAtivo'>
-            <div className='telaJogo__colunaMenuAtivo__inner'>
-              {Object.entries(configArvore).map(([categoria, propriedades]) => (
-                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria'>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                    {categoria}
-                  </div>
-                  {Object.keys(propriedades).map(chave => (
-                    <InputConfig
-                      key={`${categoria}-${chave}`}
-                      rotulo={chave}
-                      categoria={categoria}
-                      chave={chave}
-                      config={configArvore}
-                      atualizar={atualizarConfigArvore}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {showConfigGrama && (
-          <div className='telaJogo__colunaMenuAtivo'>
-            <div className='telaJogo__colunaMenuAtivo__inner'>
-              {Object.entries(configGrama).map(([categoria, propriedades]) => (
-                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria'>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                    {categoria}
-                  </div>
-                  {Object.keys(propriedades).map(chave => (
-                    <InputConfig
-                      key={`${categoria}-${chave}`}
-                      rotulo={chave}
-                      categoria={categoria}
-                      chave={chave}
-                      config={configGrama}
-                      atualizar={atualizarConfigGrama}
+                      config={config[abaAtiva]}
+                      atualizar={(cat, ch, val) => atualizarConfigGeral(abaAtiva, cat, ch, val)}
                     />
                   ))}
                 </div>
@@ -365,13 +286,19 @@ export default function App() {
               key={carro.id}
               matiz={carro.matiz}
               posicaoInicial={carro.pos}
-              config={config}
+              config={config.carro}
               segueCamera={!cameraLivre && carro.id === 1}
             />
           ))}
 
           <Suspense fallback={null}>
-            <Terreno config={configTerreno} arvconfig={configArvore} gramaconfig={configGrama} moitaconfig={configMoita} />
+            <Terreno
+              config={config.terreno}
+              arvconfig={config.arvore}
+              gramaconfig={config.grama}
+              moitaconfig={config.moita}
+              estradaconfig={config.estrada}
+            />
           </Suspense>
 
           <OrbitControls

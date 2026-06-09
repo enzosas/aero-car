@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react'
-import { useLoader, useFrame } from '@react-three/fiber'
+import { useLoader } from '@react-three/fiber'
 import * as THREE from 'three'
 import texturaTerrenoUrl from '../assets/texturagrama.png'
 import texturaGramaUrl from '../assets/grama.png'
@@ -152,22 +152,51 @@ export const obternormalterrenoem = (x, z) => {
     return new THREE.Vector3().crossVectors(tz, tx).normalize()
 }
 
-export const gerarPosicaoRandomTerreno = () => {
+const estaPertoDaEstrada = (x, z, pontosEstrada, distanciaMinima) => {
+    if (!pontosEstrada || pontosEstrada.length === 0) return false;
+    const distSqMin = distanciaMinima * distanciaMinima;
+    for (let i = 0; i < pontosEstrada.length; i++) {
+        const p = pontosEstrada[i];
+        const dx = x - p.x;
+        const dz = z - p.z;
+        if (dx * dx + dz * dz < distSqMin) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export const gerarPosicaoRandomTerreno = (pontosEstrada, distMin) => {
     const { bboxmin, bboxmax } = TerrenoState;
     if (bboxmin === bboxmax) return new THREE.Vector3(0, 0, 0);
-    const x = bboxmin + Math.random() * (bboxmax - bboxmin);
-    const z = bboxmin + Math.random() * (bboxmax - bboxmin);
+
+    let x = 0;
+    let z = 0;
+    let valido = false;
+    let tentativas = 0;
+
+    while (!valido && tentativas < 30) {
+        x = bboxmin + Math.random() * (bboxmax - bboxmin);
+        z = bboxmin + Math.random() * (bboxmax - bboxmin);
+        tentativas++;
+        if (pontosEstrada && distMin > 0) {
+            if (estaPertoDaEstrada(x, z, pontosEstrada, distMin)) {
+                continue;
+            }
+        }
+        valido = true;
+    }
+
     const y = obteralturaterrenoem(x, z);
     return new THREE.Vector3(x, y, z);
 }
 
-export const gerarUmaArvore = (id, arvoresparams) => {
-    const posicao = gerarPosicaoRandomTerreno();
+export const gerarUmaArvore = (id, arvoresparams, pontosEstrada, distMin) => {
+    const posicao = gerarPosicaoRandomTerreno(pontosEstrada, distMin);
     if (!posicao) return null;
 
     const tamanhoBase = arvoresparams.alturaTronco + arvoresparams.raioEsfera;
     const tamanho = tamanhoBase + Math.random() * arvoresparams.alturaTroncoRandExtra;
-
     const texturaIndex = Math.floor(Math.random() * 5);
 
     return {
@@ -178,19 +207,18 @@ export const gerarUmaArvore = (id, arvoresparams) => {
     };
 }
 
-export const gerarArvoresAleatorias = (arvoresparams) => {
+export const gerarArvoresAleatorias = (arvoresparams, pontosEstrada, distMin) => {
     const arvores = [];
     if (!arvoresparams) return arvores;
 
     for (let i = 0; i < arvoresparams.quantidade; i++) {
-        const novaArvore = gerarUmaArvore(i, arvoresparams);
+        const novaArvore = gerarUmaArvore(i, arvoresparams, pontosEstrada, distMin);
         if (novaArvore) {
             arvores.push(novaArvore);
         }
     }
     return arvores;
 }
-
 
 const GrupoArvores = ({ textura, arvores }) => {
     const meshRef1 = useRef()
@@ -234,7 +262,6 @@ export const ArvoresInstanced = ({ arvores, texturas }) => {
         <group>
             {texturas.map((textura, index) => {
                 const arvoresDestaTextura = arvores.filter(a => a.texturaIndex === index)
-
                 return (
                     <GrupoArvores
                         key={`grupo-arvore-${index}`}
@@ -251,52 +278,30 @@ export const GramadoInstanced = ({ gramas, textura, gramaconfig }) => {
     const meshRef1 = useRef()
     const meshRef2 = useRef()
     const dummy = useMemo(() => new THREE.Object3D(), [])
-    const geometriaBase = useMemo(() => {
-        const geo = new THREE.PlaneGeometry(1, 1)
-        geo.translate(0, 0.5, 0)
-        return geo
-    }, [])
-    const up = useMemo(() => new THREE.Vector3(0, 1, 0), [])
-    const qNormal = useMemo(() => new THREE.Quaternion(), [])
-    const qRot = useMemo(() => new THREE.Quaternion(), [])
+    const geometriaBase = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
 
     useEffect(() => {
         if (!meshRef1.current || !meshRef2.current) return
 
-        const alturaBase = gramaconfig?.grama?.altura || 6.0
-        const larguraBase = (gramaconfig?.grama?.raio || 2.0) * 2
+        const altura = gramaconfig?.grama?.altura || 6.0
+        const largura = (gramaconfig?.grama?.raio || 2.0) * 2
 
         gramas.forEach((grama, i) => {
-            const fatorDispersao = getPseudoRandom(grama.posicao.x, grama.posicao.z)
-            const escalaAleatoria = 0.6 + fatorDispersao * 0.8
-
-            const largura = larguraBase * escalaAleatoria
-            const altura = alturaBase * escalaAleatoria
-
-            dummy.position.set(grama.posicao.x, grama.posicao.y, grama.posicao.z)
-
-            const rotacaoAleatoria = fatorDispersao * Math.PI
-
-            if (grama.normal) {
-                qNormal.setFromUnitVectors(up, grama.normal)
-
-                qRot.setFromAxisAngle(up, rotacaoAleatoria)
-                dummy.quaternion.copy(qNormal).multiply(qRot)
-                dummy.scale.set(largura, altura, 1)
-                dummy.updateMatrix()
-                meshRef1.current.setMatrixAt(i, dummy.matrix)
-
-                qRot.setFromAxisAngle(up, rotacaoAleatoria + Math.PI / 2)
-                dummy.quaternion.copy(qNormal).multiply(qRot)
-                dummy.scale.set(largura, altura, 1)
-                dummy.updateMatrix()
-                meshRef2.current.setMatrixAt(i, dummy.matrix)
-            }
+            const yAtual = grama.posicao.y + altura / 2
+            dummy.position.set(grama.posicao.x, yAtual, grama.posicao.z)
+            const rotacaoAleatoria = Math.random() * Math.PI
+            dummy.rotation.set(0, rotacaoAleatoria, 0)
+            dummy.scale.set(largura, altura, 1)
+            dummy.updateMatrix()
+            meshRef1.current.setMatrixAt(i, dummy.matrix)
+            dummy.rotation.set(0, rotacaoAleatoria + Math.PI / 2, 0)
+            dummy.updateMatrix()
+            meshRef2.current.setMatrixAt(i, dummy.matrix)
         })
 
         meshRef1.current.instanceMatrix.needsUpdate = true
         meshRef2.current.instanceMatrix.needsUpdate = true
-    }, [gramas, gramaconfig, dummy, up, qNormal, qRot])
+    }, [gramas, gramaconfig, dummy])
 
     if (gramas.length === 0) return null
 
@@ -312,10 +317,11 @@ export const GramadoInstanced = ({ gramas, textura, gramaconfig }) => {
     )
 }
 
-const gerarGramado = (gramaparams) => {
+const gerarGramado = (gramaparams, pontosEstrada, distMin) => {
     const gramas = [];
+    if (!gramaparams) return gramas;
     for (let i = 0; i < gramaparams.quantidade; i++) {
-        const posicao = gerarPosicaoRandomTerreno();
+        const posicao = gerarPosicaoRandomTerreno(pontosEstrada, distMin);
         const normal = obternormalterrenoem(posicao.x, posicao.z);
         gramas.push({
             id: i,
@@ -330,52 +336,30 @@ export const MoitasInstanced = ({ moitas, textura, moitaconfig }) => {
     const meshRef1 = useRef()
     const meshRef2 = useRef()
     const dummy = useMemo(() => new THREE.Object3D(), [])
-    const geometriaBase = useMemo(() => {
-        const geo = new THREE.PlaneGeometry(1, 1)
-        geo.translate(0, 0.5, 0)
-        return geo
-    }, [])
-    const up = useMemo(() => new THREE.Vector3(0, 1, 0), [])
-    const qNormal = useMemo(() => new THREE.Quaternion(), [])
-    const qRot = useMemo(() => new THREE.Quaternion(), [])
+    const geometriaBase = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
 
     useEffect(() => {
         if (!meshRef1.current || !meshRef2.current) return
 
-        const alturaBase = moitaconfig?.moita?.altura || 12.0
-        const larguraBase = (moitaconfig?.moita?.raio || 6.0) * 2
+        const altura = moitaconfig?.moita?.altura || 12.0
+        const largura = (moitaconfig?.moita?.raio || 6.0) * 2
 
         moitas.forEach((moita, i) => {
-            const fatorDispersao = getPseudoRandom(moita.posicao.x, moita.posicao.z)
-            const escalaAleatoria = 0.6 + fatorDispersao * 0.8
-
-            const largura = larguraBase * escalaAleatoria
-            const altura = alturaBase * escalaAleatoria
-
-            dummy.position.set(moita.posicao.x, moita.posicao.y, moita.posicao.z)
-
-            const rotacaoAleatoria = fatorDispersao * Math.PI
-
-            if (moita.normal) {
-                qNormal.setFromUnitVectors(up, moita.normal)
-
-                qRot.setFromAxisAngle(up, rotacaoAleatoria)
-                dummy.quaternion.copy(qNormal).multiply(qRot)
-                dummy.scale.set(largura, altura, 1)
-                dummy.updateMatrix()
-                meshRef1.current.setMatrixAt(i, dummy.matrix)
-
-                qRot.setFromAxisAngle(up, rotacaoAleatoria + Math.PI / 2)
-                dummy.quaternion.copy(qNormal).multiply(qRot)
-                dummy.scale.set(largura, altura, 1)
-                dummy.updateMatrix()
-                meshRef2.current.setMatrixAt(i, dummy.matrix)
-            }
+            const yAtual = moita.posicao.y + altura / 2
+            dummy.position.set(moita.posicao.x, yAtual, moita.posicao.z)
+            const rotacaoAleatoria = Math.random() * Math.PI
+            dummy.rotation.set(0, rotacaoAleatoria, 0)
+            dummy.scale.set(largura, altura, 1)
+            dummy.updateMatrix()
+            meshRef1.current.setMatrixAt(i, dummy.matrix)
+            dummy.rotation.set(0, rotacaoAleatoria + Math.PI / 2, 0)
+            dummy.updateMatrix()
+            meshRef2.current.setMatrixAt(i, dummy.matrix)
         })
 
         meshRef1.current.instanceMatrix.needsUpdate = true
         meshRef2.current.instanceMatrix.needsUpdate = true
-    }, [moitas, moitaconfig, dummy, up, qNormal, qRot])
+    }, [moitas, moitaconfig, dummy])
 
     if (moitas.length === 0) return null
 
@@ -391,22 +375,77 @@ export const MoitasInstanced = ({ moitas, textura, moitaconfig }) => {
     )
 }
 
-const gerarMoitas = (moitaparams) => {
+const gerarMoitas = (moitaparams, pontosEstrada, distMin) => {
     const moitas = [];
     if (!moitaparams) return moitas;
     for (let i = 0; i < moitaparams.quantidade; i++) {
-        const posicao = gerarPosicaoRandomTerreno();
-        const normal = obternormalterrenoem(posicao.x, posicao.z);
+        const posicao = gerarPosicaoRandomTerreno(pontosEstrada, distMin);
         moitas.push({
             id: i,
-            posicao: posicao,
-            normal: normal
+            posicao: posicao
         });
     }
     return moitas;
 }
 
-export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig }) {
+const MeshEstrada = ({ pontosCurva, largura = 18 }) => {
+    const geometria = useMemo(() => {
+        if (!pontosCurva || pontosCurva.length < 2) return new THREE.BufferGeometry()
+        const vertices = []
+        const uvs = []
+        const indices = []
+        const up = new THREE.Vector3(0, 1, 0)
+        const subdivisoes = pontosCurva.length - 1
+        const offsetElevacao = 0.2
+
+        for (let i = 0; i <= subdivisoes; i++) {
+            const ponto = pontosCurva[i]
+            const t = i / subdivisoes
+
+            let tangente
+            if (i < subdivisoes) {
+                tangente = pontosCurva[i + 1].clone().sub(ponto).normalize()
+            } else {
+                tangente = ponto.clone().sub(pontosCurva[i - 1]).normalize()
+            }
+
+            const esquerda = new THREE.Vector3().crossVectors(tangente, up).normalize()
+            const pEsquerda = ponto.clone().add(esquerda.clone().multiplyScalar(largura / 2))
+            const pDireita = ponto.clone().add(esquerda.clone().multiplyScalar(-largura / 2))
+
+            pEsquerda.y = obteralturaterrenoem(pEsquerda.x, pEsquerda.z) + offsetElevacao
+            pDireita.y = obteralturaterrenoem(pDireita.x, pDireita.z) + offsetElevacao
+
+            vertices.push(pEsquerda.x, pEsquerda.y, pEsquerda.z)
+            vertices.push(pDireita.x, pDireita.y, pDireita.z)
+
+            const repeticaoUV = subdivisoes * 0.05
+            uvs.push(0, t * repeticaoUV)
+            uvs.push(1, t * repeticaoUV)
+        }
+
+        for (let i = 0; i < subdivisoes; i++) {
+            const atual = i * 2
+            indices.push(atual, atual + 1, atual + 2)
+            indices.push(atual + 1, atual + 3, atual + 2)
+        }
+
+        const geo = new THREE.BufferGeometry()
+        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3))
+        geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2))
+        geo.setIndex(indices)
+        geo.computeVertexNormals()
+        return geo
+    }, [pontosCurva, largura])
+
+    return (
+        <mesh geometry={geometria}>
+            <meshBasicMaterial color="#2a2a2a" side={THREE.DoubleSide} />
+        </mesh>
+    )
+}
+
+export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, estradaconfig }) {
 
     const textura = useLoader(THREE.TextureLoader, texturaTerrenoUrl)
     textura.wrapS = THREE.RepeatWrapping
@@ -417,14 +456,16 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig })
     texturasArvores.forEach(tex => {
         tex.colorSpace = THREE.SRGBColorSpace
     })
-    
+
     const texturaGrama = useLoader(THREE.TextureLoader, texturaGramaUrl)
     texturaGrama.colorSpace = THREE.SRGBColorSpace
 
     const texturaMoita = useLoader(THREE.TextureLoader, texturaMoitaUrl)
     texturaMoita.colorSpace = THREE.SRGBColorSpace
 
-    const { geometria, arvoresGeradas, gramasGeradas, moitasGeradas } = useMemo(() => {
+    const larguraEstrada = estradaconfig?.estrada?.largura || 30.0;
+
+    const { geometria, arvoresGeradas, gramasGeradas, moitasGeradas, pontosEstrada } = useMemo(() => {
         const params = config?.parametros;
         const arvoreparams = arvconfig?.arvores;
         const gramaparams = gramaconfig?.grama;
@@ -432,6 +473,30 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig })
 
         if (params) {
             atualizarMatrizTerreno(params);
+        }
+
+        const pontosControle = []
+        const qtdPontosControle = 6
+        const { bboxmin, bboxmax } = TerrenoState
+
+        if (bboxmin !== bboxmax) {
+            const margem = (bboxmax - bboxmin) * 0.15
+            for (let i = 0; i < qtdPontosControle; i++) {
+                const t = i / (qtdPontosControle - 1)
+                const x = bboxmin + margem + (bboxmax - bboxmin - margem * 2) * t
+                const noiseZ = getPseudoRandom(i, 888) - 0.5
+                const z = bboxmin + margem + (bboxmax - bboxmin - margem * 2) * 0.5 + noiseZ * (bboxmax - bboxmin - margem * 2) * 0.5
+                pontosControle.push(new THREE.Vector3(x, 0, z))
+            }
+        }
+
+        let pontosDaCurva = []
+        if (pontosControle.length >= 2) {
+            const curva = new THREE.CatmullRomCurve3(pontosControle)
+            pontosDaCurva = curva.getPoints(200)
+            pontosDaCurva.forEach(p => {
+                p.y = obteralturaterrenoem(p.x, p.z)
+            })
         }
 
         const vertices = [];
@@ -477,17 +542,23 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig })
             geo.computeVertexNormals();
         }
 
-        const arvores = arvoreparams ? gerarArvoresAleatorias(arvoreparams) : [];
-        const gramas = gerarGramado(gramaparams);
-        const moitas = gerarMoitas(moitaparams);
+        const metadeDaLargura = larguraEstrada / 2
+        const distArvore = (arvoreparams?.distanciaEstrada || 20.0) + metadeDaLargura
+        const distGrama = (gramaparams?.distanciaEstrada || 30.0) + metadeDaLargura
+        const distMoita = (moitaparams?.distanciaEstrada || 20.0) + metadeDaLargura
+
+        const arvores = arvoreparams ? gerarArvoresAleatorias(arvoreparams, pontosDaCurva, distArvore) : [];
+        const gramas = gerarGramado(gramaparams, pontosDaCurva, distGrama);
+        const moitas = gerarMoitas(moitaparams, pontosDaCurva, distMoita);
 
         return {
             geometria: geo,
             arvoresGeradas: arvores,
             gramasGeradas: gramas,
-            moitasGeradas: moitas
+            moitasGeradas: moitas,
+            pontosEstrada: pontosDaCurva
         };
-    }, [config, arvconfig, gramaconfig, moitaconfig]);
+    }, [config, arvconfig, gramaconfig, moitaconfig, larguraEstrada]);
 
     return (
         <group>
@@ -500,6 +571,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig })
                     transparent={true}
                 />
             </mesh>
+            <MeshEstrada pontosCurva={pontosEstrada} largura={50} />
             <ArvoresInstanced
                 arvores={arvoresGeradas}
                 texturas={texturasArvores}
