@@ -165,7 +165,7 @@ export default function App() {
     },
     estrada: {
       estrada: {
-        largura: 30.0,
+        largura: 80.0,
       }
     }
   })

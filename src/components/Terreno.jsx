@@ -9,6 +9,7 @@ import texturaarvore3 from '../assets/tree3.png'
 import texturaarvore4 from '../assets/tree4.png'
 import texturaarvore5 from '../assets/tree5.png'
 import texturaMoitaUrl from '../assets/moita.png'
+import texturaAsfaltoUrl from '../assets/asfalto.jpg'
 
 const imagensArvores = [texturaarvore1, texturaarvore2, texturaarvore3, texturaarvore4, texturaarvore5];
 
@@ -388,15 +389,16 @@ const gerarMoitas = (moitaparams, pontosEstrada, distMin) => {
     return moitas;
 }
 
-const MeshEstrada = ({ pontosCurva, largura = 18 }) => {
+const MeshEstrada = ({ pontosCurva, largura = 18, textura }) => {
     const geometria = useMemo(() => {
         if (!pontosCurva || pontosCurva.length < 2) return new THREE.BufferGeometry()
+
         const vertices = []
         const uvs = []
         const indices = []
         const up = new THREE.Vector3(0, 1, 0)
         const subdivisoes = pontosCurva.length - 1
-        const offsetElevacao = 0.2
+        const offsetElevacao = 0.8
 
         for (let i = 0; i <= subdivisoes; i++) {
             const ponto = pontosCurva[i]
@@ -419,9 +421,8 @@ const MeshEstrada = ({ pontosCurva, largura = 18 }) => {
             vertices.push(pEsquerda.x, pEsquerda.y, pEsquerda.z)
             vertices.push(pDireita.x, pDireita.y, pDireita.z)
 
-            const repeticaoUV = subdivisoes * 0.05
-            uvs.push(0, t * repeticaoUV)
-            uvs.push(1, t * repeticaoUV)
+            uvs.push(0, t)
+            uvs.push(1, t)
         }
 
         for (let i = 0; i < subdivisoes; i++) {
@@ -435,12 +436,49 @@ const MeshEstrada = ({ pontosCurva, largura = 18 }) => {
         geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2))
         geo.setIndex(indices)
         geo.computeVertexNormals()
+
         return geo
     }, [pontosCurva, largura])
 
     return (
         <mesh geometry={geometria}>
-            <meshBasicMaterial color="#2a2a2a" side={THREE.DoubleSide} />
+            <shaderMaterial
+                attach="material"
+                side={THREE.DoubleSide}
+                polygonOffset={true}
+                polygonOffsetFactor={-1}
+                polygonOffsetUnits={-1}
+                uniforms={{
+                    uTextura: { value: textura },
+                    uRepeticaoX: { value: largura / 50.0 },
+                    uRepeticaoY: { value: pontosCurva.length * 0.75 }
+                }}
+                vertexShader={`
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `}
+                fragmentShader={`
+                    varying vec2 vUv;
+                    uniform sampler2D uTextura;
+                    uniform float uRepeticaoX;
+                    uniform float uRepeticaoY;
+                    
+                    void main() {
+                        vec2 uvTiled = vec2(vUv.x * uRepeticaoX, vUv.y * uRepeticaoY);
+                        vec4 corAsfalto = texture2D(uTextura, uvTiled);
+                        
+                        float linhaCentro = step(0.49, vUv.x) * step(vUv.x, 0.51);
+                        float tracejado = step(0.6, fract(vUv.y * uRepeticaoY * 1.0));
+                        
+                        vec4 corLinha = vec4(1.0, 0.75, 0.0, 1.0);
+                        
+                        gl_FragColor = mix(corAsfalto, corLinha, linhaCentro * tracejado);
+                    }
+                `}
+            />
         </mesh>
     )
 }
@@ -462,6 +500,11 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
 
     const texturaMoita = useLoader(THREE.TextureLoader, texturaMoitaUrl)
     texturaMoita.colorSpace = THREE.SRGBColorSpace
+
+    const texturaAsfalto = useLoader(THREE.TextureLoader, texturaAsfaltoUrl)
+    texturaAsfalto.wrapS = THREE.RepeatWrapping
+    texturaAsfalto.wrapT = THREE.RepeatWrapping
+    texturaAsfalto.colorSpace = THREE.SRGBColorSpace
 
     const larguraEstrada = estradaconfig?.estrada?.largura || 30.0;
 
@@ -571,7 +614,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
                     transparent={true}
                 />
             </mesh>
-            <MeshEstrada pontosCurva={pontosEstrada} largura={50} />
+            <MeshEstrada pontosCurva={pontosEstrada} largura={larguraEstrada} textura={texturaAsfalto} />
             <ArvoresInstanced
                 arvores={arvoresGeradas}
                 texturas={texturasArvores}
