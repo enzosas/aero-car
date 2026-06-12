@@ -17,7 +17,10 @@ export const TerrenoState = {
     malha: [],
     bboxmin: 0,
     bboxmax: 0,
-    pontostotal: 0
+    pontostotal: 0,
+    ptcontroleAtual: 0,
+    alturasBase: [],
+    estradaRuido: []
 }
 
 const getPseudoRandom = (i, j) => {
@@ -63,6 +66,18 @@ export const atualizarMatrizTerreno = (params) => {
     const numpatches = ptcontrole - 3;
     const numVertices = numpatches * subdivisoes + 1;
     TerrenoState.pontostotal = numVertices;
+
+    if (TerrenoState.ptcontroleAtual !== ptcontrole) {
+        TerrenoState.alturasBase = [];
+        for (let i = 0; i < ptcontrole; i++) {
+            TerrenoState.alturasBase[i] = [];
+            for (let j = 0; j < ptcontrole; j++) {
+                TerrenoState.alturasBase[i][j] = Math.random() - 0.5;
+            }
+        }
+        TerrenoState.ptcontroleAtual = ptcontrole;
+        TerrenoState.estradaRuido = [];
+    }
     const controlpoints = [];
     const offsetx = -(ptcontrole - 1) * espacamento / 2.0;
     const offsetz = -(ptcontrole - 1) * espacamento / 2.0;
@@ -75,7 +90,7 @@ export const atualizarMatrizTerreno = (params) => {
             if (i < 2 || i >= ptcontrole - 2 || j < 2 || j >= ptcontrole - 2) {
                 bordafactor = fatorborda;
             }
-            const y = (getPseudoRandom(i, j) - 0.5) * ondulacao * bordafactor;
+            const y = TerrenoState.alturasBase[i][j] * ondulacao * bordafactor;
             controlpoints[i][j] = new THREE.Vector3(x, y, z);
         }
     }
@@ -535,10 +550,17 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
 
         if (bboxmin !== bboxmax) {
             const margem = (bboxmax - bboxmin) * 0.15
+
+            if (TerrenoState.estradaRuido.length === 0) {
+                for (let i = 0; i < qtdPontosControle; i++) {
+                    TerrenoState.estradaRuido.push(Math.random() - 0.5);
+                }
+            }
+
             for (let i = 0; i < qtdPontosControle; i++) {
                 const t = i / (qtdPontosControle - 1)
                 const x = bboxmin + margem + (bboxmax - bboxmin - margem * 2) * t
-                const noiseZ = getPseudoRandom(i, 888) - 0.5
+                const noiseZ = TerrenoState.estradaRuido[i]
                 const z = bboxmin + margem + (bboxmax - bboxmin - margem * 2) * 0.5 + noiseZ * (bboxmax - bboxmin - margem * 2) * 0.5
                 pontosControle.push(new THREE.Vector3(x, 0, z))
             }
