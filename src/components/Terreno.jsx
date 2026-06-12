@@ -204,7 +204,8 @@ export const gerarUmaArvore = (id, arvoresparams, pontosEstrada, distMin) => {
         id: id,
         posicao: posicao,
         tamanho: tamanho,
-        texturaIndex: texturaIndex
+        texturaIndex: texturaIndex,
+        rotacaoY: Math.random() * Math.PI,
     };
 }
 
@@ -232,12 +233,11 @@ const GrupoArvores = ({ textura, arvores }) => {
         arvores.forEach((arvore, i) => {
             const yAtual = arvore.posicao.y + arvore.tamanho / 2
             dummy.position.set(arvore.posicao.x, yAtual, arvore.posicao.z)
-            const rotacaoAleatoria = Math.random() * Math.PI
-            dummy.rotation.set(0, rotacaoAleatoria, 0)
+            dummy.rotation.set(0, arvore.rotacaoY, 0)
             dummy.scale.set(arvore.tamanho, arvore.tamanho, 1)
             dummy.updateMatrix()
             meshRef1.current.setMatrixAt(i, dummy.matrix)
-            dummy.rotation.set(0, rotacaoAleatoria + Math.PI / 2, 0)
+            dummy.rotation.set(0, arvore.rotacaoY + Math.PI / 2, 0)
             dummy.updateMatrix()
             meshRef2.current.setMatrixAt(i, dummy.matrix)
         })
@@ -293,13 +293,12 @@ export const GramadoInstanced = ({ gramas, textura, gramaconfig }) => {
             const offset = grama.normal.clone().multiplyScalar(altura / 2)
             dummy.position.copy(grama.posicao).add(offset)
             dummy.scale.set(largura, altura, 1)
-            const rotacaoAleatoria = Math.random() * Math.PI
             const alinharChao = new THREE.Quaternion().setFromUnitVectors(vetorCima, grama.normal)
-            const rotacao1 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria)
+            const rotacao1 = new THREE.Quaternion().setFromAxisAngle(vetorCima, grama.rotacaoY)
             dummy.quaternion.multiplyQuaternions(alinharChao, rotacao1)
             dummy.updateMatrix()
             meshRef1.current.setMatrixAt(i, dummy.matrix)
-            const rotacao2 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria + Math.PI / 2)
+            const rotacao2 = new THREE.Quaternion().setFromAxisAngle(vetorCima, grama.rotacaoY + Math.PI / 2)
             dummy.quaternion.multiplyQuaternions(alinharChao, rotacao2)
             dummy.updateMatrix()
             meshRef2.current.setMatrixAt(i, dummy.matrix)
@@ -332,7 +331,8 @@ const gerarGramado = (gramaparams, pontosEstrada, distMin) => {
         gramas.push({
             id: i,
             posicao: posicao,
-            normal: normal
+            normal: normal,
+            rotacaoY: Math.random() * Math.PI,
         });
     }
     return gramas;
@@ -355,13 +355,12 @@ export const MoitasInstanced = ({ moitas, textura, moitaconfig }) => {
             const offset = moita.normal.clone().multiplyScalar(altura / 2)
             dummy.position.copy(moita.posicao).add(offset)
             dummy.scale.set(largura, altura, 1)
-            const rotacaoAleatoria = Math.random() * Math.PI
             const alinharChao = new THREE.Quaternion().setFromUnitVectors(vetorCima, moita.normal)
-            const rotacao1 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria)
+            const rotacao1 = new THREE.Quaternion().setFromAxisAngle(vetorCima, moita.rotacaoY)
             dummy.quaternion.multiplyQuaternions(alinharChao, rotacao1)
             dummy.updateMatrix()
             meshRef1.current.setMatrixAt(i, dummy.matrix)
-            const rotacao2 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria + Math.PI / 2)
+            const rotacao2 = new THREE.Quaternion().setFromAxisAngle(vetorCima, moita.rotacaoY + Math.PI / 2)
             dummy.quaternion.multiplyQuaternions(alinharChao, rotacao2)
             dummy.updateMatrix()
             meshRef2.current.setMatrixAt(i, dummy.matrix)
@@ -394,7 +393,8 @@ const gerarMoitas = (moitaparams, pontosEstrada, distMin) => {
         moitas.push({
             id: i,
             posicao: posicao,
-            normal: normal
+            normal: normal,
+            rotacaoY: Math.random() * Math.PI,
         });
     }
     return moitas;
