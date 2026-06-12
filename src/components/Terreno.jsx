@@ -434,7 +434,7 @@ const MeshEstrada = ({ pontosCurva, largura = 18, textura }) => {
             if (i < subdivisoes) {
                 tangente = pontosCurva[i + 1].clone().sub(ponto).normalize()
             } else {
-                tangente = ponto.clone().sub(pontosCurva[i - 1]).normalize()
+                tangente = pontosCurva[1].clone().sub(ponto).normalize()
             }
 
             const esquerda = new THREE.Vector3().crossVectors(tangente, up).normalize()
@@ -477,7 +477,7 @@ const MeshEstrada = ({ pontosCurva, largura = 18, textura }) => {
                 uniforms={{
                     uTextura: { value: textura },
                     uRepeticaoX: { value: largura / 50.0 },
-                    uRepeticaoY: { value: pontosCurva.length * 0.75 }
+                    uRepeticaoY: { value: Math.round(pontosCurva.length * 0.75) }
                 }}
                 vertexShader={`
                     varying vec2 vUv;
@@ -545,34 +545,35 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
         }
 
         const pontosControle = []
-        const qtdPontosControle = 6
+        const qtdPontosControle = estradaconfig.estrada.quantidadePontosControle;
         const { bboxmin, bboxmax } = TerrenoState
 
         if (bboxmin !== bboxmax) {
-            const margem = (bboxmax - bboxmin) * 0.15
-
+            const centro = (bboxmax + bboxmin) / 2;
+            const raioBase = (bboxmax - bboxmin) * estradaconfig.estrada.raioBase;
             if (TerrenoState.estradaRuido.length === 0) {
                 for (let i = 0; i < qtdPontosControle; i++) {
-                    TerrenoState.estradaRuido.push(Math.random() - 0.5);
+                    TerrenoState.estradaRuido.push((Math.random() - 0.5) * raioBase * estradaconfig.estrada.quantidadeRuido);
                 }
             }
-
             for (let i = 0; i < qtdPontosControle; i++) {
-                const t = i / (qtdPontosControle - 1)
-                const x = bboxmin + margem + (bboxmax - bboxmin - margem * 2) * t
-                const noiseZ = TerrenoState.estradaRuido[i]
-                const z = bboxmin + margem + (bboxmax - bboxmin - margem * 2) * 0.5 + noiseZ * (bboxmax - bboxmin - margem * 2) * 0.5
-                pontosControle.push(new THREE.Vector3(x, 0, z))
+                const angulo = (i / qtdPontosControle) * Math.PI * 2;
+                const raioComRuido = raioBase + TerrenoState.estradaRuido[i];
+
+                const x = centro + Math.cos(angulo) * raioComRuido;
+                const z = centro + Math.sin(angulo) * raioComRuido;
+
+                pontosControle.push(new THREE.Vector3(x, 0, z));
             }
         }
 
         let pontosDaCurva = []
         if (pontosControle.length >= 2) {
-            const curva = new THREE.CatmullRomCurve3(pontosControle)
-            pontosDaCurva = curva.getPoints(200)
+            const curva = new THREE.CatmullRomCurve3(pontosControle, true);
+            pontosDaCurva = curva.getPoints(200);
             pontosDaCurva.forEach(p => {
-                p.y = obteralturaterrenoem(p.x, p.z)
-            })
+                p.y = obteralturaterrenoem(p.x, p.z);
+            });
         }
 
         const vertices = [];
@@ -634,7 +635,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
             moitasGeradas: moitas,
             pontosEstrada: pontosDaCurva
         };
-    }, [config, arvconfig, gramaconfig, moitaconfig, larguraEstrada]);
+    }, [config, arvconfig, gramaconfig, moitaconfig, estradaconfig]);
 
     return (
         <group>

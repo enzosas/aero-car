@@ -169,6 +169,9 @@ export default function App() {
     estrada: {
       estrada: {
         largura: 80.0,
+        quantidadePontosControle: 20.0,
+        raioBase: 0.35,
+        quantidadeRuido: 0.5,
       }
     }
   })
