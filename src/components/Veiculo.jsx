@@ -140,26 +140,14 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
                 velatual = 0;
             }
         }
-        const velReferenciaEndurecimento = config.fisica.velReferenciaEndurecimento;
-        let velPercentualLinear = Math.abs(velatual) / velReferenciaEndurecimento;
-        velPercentualLinear = THREE.MathUtils.clamp(velPercentualLinear, 0, 1);
-        const velPercentualCurva = 1 - Math.pow(1 - velPercentualLinear, 4);
 
-        const velVolanteDinamica = THREE.MathUtils.lerp(
-            config.fisica.taxaVelocidadeVolanteMax, 
-            config.fisica.taxaVelocidadeVolanteMin,
-            velPercentualCurva
-        );
-        let limiteVolanteDinamico = THREE.MathUtils.lerp(
-            config.fisica.taxaAnguloVolanteMax, 
-            config.fisica.taxaAnguloVolanteMin,
-            velPercentualCurva
-        );
+        const velVolanteDinamica = config.fisica.velocidadeVolante;
+        let limiteVolanteDinamico = config.fisica.anguloVolanteMax;
         const aderenciaPista = config.fisica.aderenciaPista;
-        if (Math.abs(velatual) > 1.0) {
-            const limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velatual * velatual);
-            limiteVolanteDinamico = limiteAtritoPneu;
-        }
+
+        const velParaCalculoAtrito = Math.max(0.1, Math.abs(velatual));
+        const limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velParaCalculoAtrito * velParaCalculoAtrito);
+        limiteVolanteDinamico = Math.min(limiteVolanteDinamico, limiteAtritoPneu);
 
         if (esquerda) {
             anguloatual += velVolanteDinamica;
