@@ -284,18 +284,22 @@ export const GramadoInstanced = ({ gramas, textura, gramaconfig }) => {
     useEffect(() => {
         if (!meshRef1.current || !meshRef2.current) return
 
-        const altura = gramaconfig?.grama?.altura || 6.0
-        const largura = (gramaconfig?.grama?.raio || 2.0) * 2
+        const altura = gramaconfig?.grama?.altura || 16.0
+        const largura = (gramaconfig?.grama?.raio || 22.0) * 2
+        const vetorCima = new THREE.Vector3(0, 1, 0)
 
         gramas.forEach((grama, i) => {
-            const yAtual = grama.posicao.y + altura / 2
-            dummy.position.set(grama.posicao.x, yAtual, grama.posicao.z)
-            const rotacaoAleatoria = Math.random() * Math.PI
-            dummy.rotation.set(0, rotacaoAleatoria, 0)
+            const offset = grama.normal.clone().multiplyScalar(altura / 2)
+            dummy.position.copy(grama.posicao).add(offset)
             dummy.scale.set(largura, altura, 1)
+            const rotacaoAleatoria = Math.random() * Math.PI
+            const alinharChao = new THREE.Quaternion().setFromUnitVectors(vetorCima, grama.normal)
+            const rotacao1 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria)
+            dummy.quaternion.multiplyQuaternions(alinharChao, rotacao1)
             dummy.updateMatrix()
             meshRef1.current.setMatrixAt(i, dummy.matrix)
-            dummy.rotation.set(0, rotacaoAleatoria + Math.PI / 2, 0)
+            const rotacao2 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria + Math.PI / 2)
+            dummy.quaternion.multiplyQuaternions(alinharChao, rotacao2)
             dummy.updateMatrix()
             meshRef2.current.setMatrixAt(i, dummy.matrix)
         })
@@ -342,18 +346,22 @@ export const MoitasInstanced = ({ moitas, textura, moitaconfig }) => {
     useEffect(() => {
         if (!meshRef1.current || !meshRef2.current) return
 
-        const altura = moitaconfig?.moita?.altura || 12.0
-        const largura = (moitaconfig?.moita?.raio || 6.0) * 2
+        const altura = moitaconfig?.moita?.altura || 40.0
+        const largura = (moitaconfig?.moita?.raio || 30.0) * 2
+        const vetorCima = new THREE.Vector3(0, 1, 0)
 
         moitas.forEach((moita, i) => {
-            const yAtual = moita.posicao.y + altura / 2
-            dummy.position.set(moita.posicao.x, yAtual, moita.posicao.z)
-            const rotacaoAleatoria = Math.random() * Math.PI
-            dummy.rotation.set(0, rotacaoAleatoria, 0)
+            const offset = moita.normal.clone().multiplyScalar(altura / 2)
+            dummy.position.copy(moita.posicao).add(offset)
             dummy.scale.set(largura, altura, 1)
+            const rotacaoAleatoria = Math.random() * Math.PI
+            const alinharChao = new THREE.Quaternion().setFromUnitVectors(vetorCima, moita.normal)
+            const rotacao1 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria)
+            dummy.quaternion.multiplyQuaternions(alinharChao, rotacao1)
             dummy.updateMatrix()
             meshRef1.current.setMatrixAt(i, dummy.matrix)
-            dummy.rotation.set(0, rotacaoAleatoria + Math.PI / 2, 0)
+            const rotacao2 = new THREE.Quaternion().setFromAxisAngle(vetorCima, rotacaoAleatoria + Math.PI / 2)
+            dummy.quaternion.multiplyQuaternions(alinharChao, rotacao2)
             dummy.updateMatrix()
             meshRef2.current.setMatrixAt(i, dummy.matrix)
         })
@@ -381,9 +389,11 @@ const gerarMoitas = (moitaparams, pontosEstrada, distMin) => {
     if (!moitaparams) return moitas;
     for (let i = 0; i < moitaparams.quantidade; i++) {
         const posicao = gerarPosicaoRandomTerreno(pontosEstrada, distMin);
+        const normal = obternormalterrenoem(posicao.x, posicao.z); // Pegando a normal
         moitas.push({
             id: i,
-            posicao: posicao
+            posicao: posicao,
+            normal: normal
         });
     }
     return moitas;
