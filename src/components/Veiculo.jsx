@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -92,6 +92,25 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
 
     const posAnterior = useRef(new THREE.Vector3(...posicaoInicial))
 
+    const isDragging = useRef(false)
+    const angulosRelativos = useRef({ pitch: Math.PI / 3 })
+    const initCam = useRef(false)
+
+    useEffect(() => {
+        const onPointerDown = (e) => {
+            if (e.button === 2) isDragging.current = true
+        }
+        const onPointerUp = (e) => {
+            if (e.button === 2) isDragging.current = false
+        }
+        window.addEventListener('pointerdown', onPointerDown)
+        window.addEventListener('pointerup', onPointerUp)
+        return () => {
+            window.removeEventListener('pointerdown', onPointerDown)
+            window.removeEventListener('pointerup', onPointerUp)
+        }
+    }, [])
+
     useFrame((state) => {
         const { frente, tras, esquerda, direita } = get()
 
@@ -143,15 +162,44 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
                 const alvocamera = chassiref.current.position.clone().add(alturaDaCamera)
                 const deltaMove = new THREE.Vector3().subVectors(chassiref.current.position, posAnterior.current)
                 state.camera.position.add(deltaMove)
+                const chassiQuat = chassiref.current.quaternion
+                const vetorCima = new THREE.Vector3(0, 1, 0).applyQuaternion(chassiQuat).normalize()
+                const vetorTras = new THREE.Vector3(0, 0, -1).applyQuaternion(chassiQuat).normalize()
+                const currentOffset = state.camera.position.clone().sub(alvocamera)
+                const distance = currentOffset.length()
+                if (!initCam.current) {
+                    angulosRelativos.current.pitch = currentOffset.angleTo(vetorCima) || (Math.PI / 3)
+                    initCam.current = true
+                }
+                const estaParado = Math.abs(velatual) < 0.5
+                if (isDragging.current || estaParado) {
+                    angulosRelativos.current.pitch = currentOffset.angleTo(vetorCima)
+                } else {
+                    const pitch = angulosRelativos.current.pitch
+                    const idealOffset = new THREE.Vector3()
+                        .copy(vetorCima).multiplyScalar(Math.cos(pitch))
+                        .add(vetorTras.clone().multiplyScalar(Math.sin(pitch)))
+                        .normalize()
+                    currentOffset.normalize()
+                    const angleToIdeal = currentOffset.angleTo(idealOffset)
+
+                    if (angleToIdeal > 0.001) {
+                        let axis = new THREE.Vector3().crossVectors(currentOffset, idealOffset)
+                        if (axis.lengthSq() < 0.0001) axis.copy(vetorCima)
+                        axis.normalize()
+                        currentOffset.applyAxisAngle(axis, angleToIdeal * 0.08)
+                    }
+                    currentOffset.multiplyScalar(distance)
+                    state.camera.position.copy(alvocamera).add(currentOffset)
+                }
                 state.controls.target.copy(alvocamera)
                 state.controls.update()
             }
             posAnterior.current.copy(chassiref.current.position)
-        }
-
-        if (rodaesqfrenteref.current && rodadirfrenteref.current) {
-            rodaesqfrenteref.current.rotation.y = anguloatual
-            rodadirfrenteref.current.rotation.y = anguloatual
+            if (rodaesqfrenteref.current && rodadirfrenteref.current) {
+                rodaesqfrenteref.current.rotation.y = anguloatual
+                rodadirfrenteref.current.rotation.y = anguloatual
+            }
         }
     })
 
