@@ -144,10 +144,10 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
         const velVolanteDinamica = config.fisica.velocidadeVolante;
         let limiteVolanteDinamico = config.fisica.anguloVolanteMax;
         const aderenciaPista = config.fisica.aderenciaPista;
-
-        const velParaCalculoAtrito = Math.max(0.1, Math.abs(velatual));
+        const velParaCalculoAtrito = Math.max(0.0001, Math.abs(velatual));
         const limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velParaCalculoAtrito * velParaCalculoAtrito);
         limiteVolanteDinamico = Math.min(limiteVolanteDinamico, limiteAtritoPneu);
+        console.log(limiteVolanteDinamico)
 
         if (esquerda) {
             anguloatual += velVolanteDinamica;
