@@ -118,7 +118,8 @@ export default function App() {
         subdivisoes: 32,
         espacamento: 1000.0,
         ondulacao: 1000.0,
-        fatorborda: 0.3
+        fatorborda: 0.3,
+        repeticoesTextura: 200.0,
       },
       visualizacao: {
         fatorOpacidade: 1.0,
@@ -173,6 +174,7 @@ export default function App() {
         quantidadePontosControle: 20.0,
         raioBase: 0.35,
         quantidadeRuido: 0.5,
+        offsetElevacao: 0.7,
       }
     }
   })

@@ -416,7 +416,7 @@ const gerarMoitas = (moitaparams, pontosEstrada, distMin) => {
     return moitas;
 }
 
-const MeshEstrada = ({ pontosCurva, largura = 18, textura }) => {
+const MeshEstrada = ({ pontosCurva, largura = 18, offsetElevacao = 1.0, textura }) => {
     const geometria = useMemo(() => {
         if (!pontosCurva || pontosCurva.length < 2) return new THREE.BufferGeometry()
 
@@ -425,7 +425,6 @@ const MeshEstrada = ({ pontosCurva, largura = 18, textura }) => {
         const indices = []
         const up = new THREE.Vector3(0, 1, 0)
         const subdivisoes = pontosCurva.length - 1
-        const offsetElevacao = 0.4
 
         for (let i = 0; i <= subdivisoes; i++) {
             const ponto = pontosCurva[i]
@@ -534,6 +533,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
     texturaAsfalto.colorSpace = THREE.SRGBColorSpace
 
     const larguraEstrada = estradaconfig?.estrada?.largura || 30.0;
+    const offsetElevacao = estradaconfig?.estrada?.offsetElevacao || 1.0;
 
     const { geometria, arvoresGeradas, gramasGeradas, moitasGeradas, pontosEstrada } = useMemo(() => {
         const params = config?.parametros;
@@ -595,7 +595,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
             uvs.push(uv1.u, uv1.v, uv3.u, uv3.v, uv4.u, uv4.v);
         };
 
-        const repeticoesTex = 200.0;
+        const repeticoesTex = params.repeticoesTextura;
 
         for (let i = 0; i < TerrenoState.pontostotal - 1; i++) {
             for (let j = 0; j < TerrenoState.pontostotal - 1; j++) {
@@ -651,7 +651,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
                     transparent={true}
                 />
             </mesh>
-            <MeshEstrada pontosCurva={pontosEstrada} largura={larguraEstrada} textura={texturaAsfalto} />
+            <MeshEstrada pontosCurva={pontosEstrada} largura={larguraEstrada} textura={texturaAsfalto} offsetElevacao={offsetElevacao}/>
             <ArvoresInstanced
                 arvores={arvoresGeradas}
                 texturas={texturasArvores}
