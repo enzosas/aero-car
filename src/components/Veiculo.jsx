@@ -193,12 +193,13 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
                 const chassiQuat = chassiref.current.quaternion
                 const vetorCima = new THREE.Vector3(0, 1, 0).applyQuaternion(chassiQuat).normalize()
                 const vetorTras = new THREE.Vector3(0, 0, -1).applyQuaternion(chassiQuat).normalize()
-                const currentOffset = state.camera.position.clone().sub(alvocamera)
-                const distance = currentOffset.length()
                 if (!initCam.current) {
-                    angulosRelativos.current.pitch = currentOffset.angleTo(vetorCima) || (Math.PI / 3)
+                    const offsetInicial = vetorTras.clone().multiplyScalar(200).add(vetorCima.clone().multiplyScalar(15))
+                    state.camera.position.copy(alvocamera).add(offsetInicial)
                     initCam.current = true
                 }
+                const currentOffset = state.camera.position.clone().sub(alvocamera)
+                const distance = currentOffset.length()
                 const estaParado = Math.abs(velatual) < 0.5
                 if (isDragging.current || estaParado) {
                     angulosRelativos.current.pitch = currentOffset.angleTo(vetorCima)

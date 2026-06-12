@@ -20,7 +20,8 @@ export const TerrenoState = {
     pontostotal: 0,
     ptcontroleAtual: 0,
     alturasBase: [],
-    estradaRuido: []
+    estradaRuido: [],
+    pontosEstrada: []
 }
 
 const getPseudoRandom = (i, j) => {
@@ -551,7 +552,8 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
         if (bboxmin !== bboxmax) {
             const centro = (bboxmax + bboxmin) / 2;
             const raioBase = (bboxmax - bboxmin) * estradaconfig.estrada.raioBase;
-            if (TerrenoState.estradaRuido.length === 0) {
+            if (TerrenoState.estradaRuido.length !== qtdPontosControle) {
+                TerrenoState.estradaRuido = [];
                 for (let i = 0; i < qtdPontosControle; i++) {
                     TerrenoState.estradaRuido.push((Math.random() - 0.5) * raioBase * estradaconfig.estrada.quantidadeRuido);
                 }
@@ -574,6 +576,7 @@ export default function Terreno({ config, arvconfig, gramaconfig, moitaconfig, e
             pontosDaCurva.forEach(p => {
                 p.y = obteralturaterrenoem(p.x, p.z);
             });
+            TerrenoState.pontosEstrada = pontosDaCurva;
         }
 
         const vertices = [];

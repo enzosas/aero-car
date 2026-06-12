@@ -1,4 +1,4 @@
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, KeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -6,6 +6,7 @@ import Veiculo from './components/Veiculo'
 import Terreno from './components/Terreno'
 import './App.css'
 import fundoUrl from './fundo.jpg'
+import { TerrenoState } from './components/Terreno'
 
 const geraCorCarro = (quantidade) => {
   const grupo = Math.floor(quantidade / 4)
@@ -178,11 +179,20 @@ export default function App() {
 
   const [abaAtiva, setAbaAtiva] = useState(null)
 
-  const [carros, setCarros] = useState([
-    { id: 1, matiz: 0.0, pos: [0, 0, 0] }
-  ])
+  const [carros, setCarros] = useState([])
 
   const [cameraLivre, setCameraLivre] = useState(false)
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      if (TerrenoState.pontosEstrada && TerrenoState.pontosEstrada.length > 0) {
+        const p = TerrenoState.pontosEstrada[0];
+        setCarros([{ id: 1, matiz: 0.0, pos: [p.x, p.y + 3, p.z] }]);
+        clearInterval(intervalo);
+      }
+    }, 100);
+    return () => clearInterval(intervalo); 
+  }, []);
 
   const atualizarConfigGeral = (aba, categoria, chave, valor) => {
     setConfig(prev => ({
@@ -202,12 +212,21 @@ export default function App() {
       const quantidade = antigos.length
       const novomatiz = geraCorCarro(quantidade)
 
+      let novaPosicao = [0, 10, 0];
+      if (TerrenoState.pontosEstrada && TerrenoState.pontosEstrada.length > 0) {
+        const indiceAleatorio = Math.floor(Math.random() * TerrenoState.pontosEstrada.length);
+        const p = TerrenoState.pontosEstrada[indiceAleatorio];
+        novaPosicao = [p.x, p.y + 3, p.z];
+      } else {
+        novaPosicao = [Math.random() * 80 - 40, 10, Math.random() * 80 - 40];
+      }
+
       return [
         ...antigos,
         {
-          id: quantidade + 1,
+          id: Date.now(),
           matiz: novomatiz,
-          pos: [Math.random() * 80 - 40, 0, Math.random() * 80 - 40]
+          pos: novaPosicao
         }
       ]
     })
