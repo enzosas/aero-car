@@ -121,8 +121,14 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
             velatual += config.fisica.aceleracao
             if (velatual > config.fisica.velmax) velatual = config.fisica.velmax
         } else if (tras) {
-            velatual -= config.fisica.aceleracaoFreio
-            if (velatual < config.fisica.velmin) velatual = config.fisica.velmin
+            if (velatual > 0) {
+                velatual -= config.fisica.aceleracaoFreio
+                if (velatual < config.fisica.velmin) velatual = config.fisica.velmin
+            }
+            else {
+                velatual -= config.fisica.aceleracao
+                if (velatual < config.fisica.velmaxre) velatual = config.fisica.velmaxre
+            }
         } else {
             velatual *= config.fisica.atritoEscalar
             const atritoMecanico = config.fisica.atritoLinear;
@@ -134,11 +140,26 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
                 velatual = 0;
             }
         }
-        let velPercentualLinear = Math.abs(velatual) / config.fisica.velmax;
+        const velReferenciaEndurecimento = config.fisica.velReferenciaEndurecimento;
+        let velPercentualLinear = Math.abs(velatual) / velReferenciaEndurecimento;
         velPercentualLinear = THREE.MathUtils.clamp(velPercentualLinear, 0, 1);
         const velPercentualCurva = 1 - Math.pow(1 - velPercentualLinear, 4);
-        const velVolanteDinamica = THREE.MathUtils.lerp(config.fisica.taxaVelocidadeVolanteMax, config.fisica.taxaVelocidadeVolanteMin, velPercentualCurva);
-        const limiteVolanteDinamico = THREE.MathUtils.lerp(config.fisica.taxaAnguloVolantelMax, config.fisica.taxaAnguloVolanteMin, velPercentualCurva);
+
+        const velVolanteDinamica = THREE.MathUtils.lerp(
+            config.fisica.taxaVelocidadeVolanteMax, 
+            config.fisica.taxaVelocidadeVolanteMin,
+            velPercentualCurva
+        );
+        let limiteVolanteDinamico = THREE.MathUtils.lerp(
+            config.fisica.taxaAnguloVolanteMax, 
+            config.fisica.taxaAnguloVolanteMin,
+            velPercentualCurva
+        );
+        const aderenciaPista = config.fisica.aderenciaPista;
+        if (Math.abs(velatual) > 1.0) {
+            const limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velatual * velatual);
+            limiteVolanteDinamico = limiteAtritoPneu;
+        }
 
         if (esquerda) {
             anguloatual += velVolanteDinamica;

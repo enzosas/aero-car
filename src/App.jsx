@@ -101,15 +101,17 @@ export default function App() {
       },
       fisica: {
         aceleracao: 0.0025,
-        aceleracaoFreio: 0.005,
+        aceleracaoFreio: 0.01,
         velmax: 2.0,
-        velmin: -0.25,
+        velmaxre: -0.25,
         taxaVelocidadeVolanteMax: 0.02,
         taxaVelocidadeVolanteMin: 0.005,
-        taxaAnguloVolantelMax: 0.9,
+        taxaAnguloVolanteMax: 0.9,
         taxaAnguloVolanteMin: 0.04,
+        aderenciaPista: 0.01,
+        velReferenciaEndurecimento: 1.5,
         atritoEscalar: 0.9999,
-        atritoLinear: 0.0001,
+        atritoLinear: 0.002,
       }
     },
     terreno: {
