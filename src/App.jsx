@@ -100,12 +100,16 @@ export default function App() {
         segmentos: 16
       },
       fisica: {
-        aceleracao: 0.01,
-        desaceleracao: 0.95,
-        velmax: 1.0,
+        aceleracao: 0.0025,
+        aceleracaoFreio: 0.005,
+        velmax: 2.0,
         velmin: -0.25,
-        velvolante: 0.01,
-        limitevolante: 0.7
+        taxaVelocidadeVolanteMax: 0.02,
+        taxaVelocidadeVolanteMin: 0.005,
+        taxaAnguloVolantelMax: 0.9,
+        taxaAnguloVolanteMin: 0.04,
+        atritoEscalar: 0.9999,
+        atritoLinear: 0.0001,
       }
     },
     terreno: {

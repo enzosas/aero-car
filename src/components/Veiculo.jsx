@@ -121,28 +121,47 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
             velatual += config.fisica.aceleracao
             if (velatual > config.fisica.velmax) velatual = config.fisica.velmax
         } else if (tras) {
-            velatual -= config.fisica.aceleracao
+            velatual -= config.fisica.aceleracaoFreio
             if (velatual < config.fisica.velmin) velatual = config.fisica.velmin
         } else {
-            velatual *= config.fisica.desaceleracao
+            velatual *= config.fisica.atritoEscalar
+            const atritoMecanico = config.fisica.atritoLinear;
+            if (velatual > atritoMecanico) {
+                velatual -= atritoMecanico;
+            } else if (velatual < -atritoMecanico) {
+                velatual += atritoMecanico;
+            } else {
+                velatual = 0;
+            }
         }
+        let velPercentualLinear = Math.abs(velatual) / config.fisica.velmax;
+        velPercentualLinear = THREE.MathUtils.clamp(velPercentualLinear, 0, 1);
+        const velPercentualCurva = 1 - Math.pow(1 - velPercentualLinear, 4);
+        const velVolanteDinamica = THREE.MathUtils.lerp(config.fisica.taxaVelocidadeVolanteMax, config.fisica.taxaVelocidadeVolanteMin, velPercentualCurva);
+        const limiteVolanteDinamico = THREE.MathUtils.lerp(config.fisica.taxaAnguloVolantelMax, config.fisica.taxaAnguloVolanteMin, velPercentualCurva);
 
         if (esquerda) {
-            anguloatual += config.fisica.velvolante
-            if (anguloatual > config.fisica.limitevolante) anguloatual = config.fisica.limitevolante
+            anguloatual += velVolanteDinamica;
+            if (anguloatual > limiteVolanteDinamico) anguloatual = limiteVolanteDinamico;
         } else if (direita) {
-            anguloatual -= config.fisica.velvolante
-            if (anguloatual < -config.fisica.limitevolante) anguloatual = -config.fisica.limitevolante
+            anguloatual -= velVolanteDinamica;
+            if (anguloatual < -limiteVolanteDinamico) anguloatual = -limiteVolanteDinamico;
         } else {
-            anguloatual *= 0.85
+            if (anguloatual > 0) {
+                anguloatual -= velVolanteDinamica;
+                if (anguloatual < 0) anguloatual = 0;
+            } else if (anguloatual < 0) {
+                anguloatual += velVolanteDinamica;
+                if (anguloatual > 0) anguloatual = 0;
+            }
         }
+        anguloatual = THREE.MathUtils.clamp(anguloatual, -limiteVolanteDinamico, limiteVolanteDinamico);
 
         setvelocidade(velatual)
         setangulovolante(anguloatual)
 
         if (chassiref.current) {
-            const fvel = 1.0 / (1.0 + Math.abs(velatual) * 0.5)
-            const taxagiro = (velatual / config.dimensoes.comprimentorodas) * Math.tan(anguloatual) * fvel
+            const taxagiro = (velatual / config.dimensoes.comprimentorodas) * Math.tan(anguloatual)
             let novarotacao = rotacaocarro + taxagiro
             setrotacaocarro(novarotacao)
             const posx = chassiref.current.position.x
