@@ -232,11 +232,12 @@ const GrupoArvores = ({ textura, arvores }) => {
         arvores.forEach((arvore, i) => {
             const yAtual = arvore.posicao.y + arvore.tamanho / 2
             dummy.position.set(arvore.posicao.x, yAtual, arvore.posicao.z)
-            dummy.rotation.set(0, 0, 0)
+            const rotacaoAleatoria = Math.random() * Math.PI
+            dummy.rotation.set(0, rotacaoAleatoria, 0)
             dummy.scale.set(arvore.tamanho, arvore.tamanho, 1)
             dummy.updateMatrix()
             meshRef1.current.setMatrixAt(i, dummy.matrix)
-            dummy.rotation.set(0, Math.PI / 2, 0)
+            dummy.rotation.set(0, rotacaoAleatoria + Math.PI / 2, 0)
             dummy.updateMatrix()
             meshRef2.current.setMatrixAt(i, dummy.matrix)
         })
@@ -408,7 +409,7 @@ const MeshEstrada = ({ pontosCurva, largura = 18, textura }) => {
         const indices = []
         const up = new THREE.Vector3(0, 1, 0)
         const subdivisoes = pontosCurva.length - 1
-        const offsetElevacao = 0.8
+        const offsetElevacao = 0.4
 
         for (let i = 0; i <= subdivisoes; i++) {
             const ponto = pontosCurva[i]
