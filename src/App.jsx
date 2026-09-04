@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, KeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -24,42 +24,136 @@ const geraCorCarro = (quantidade) => {
     fracao *= 0.5
   }
 
-  return (0.25 * posicaonogrupo) + (0.25 * offset)
+  return 0.25 * posicaonogrupo + 0.25 * offset
+}
+
+function useArrastoInfinito({ valorAtual, aoMudar, passo }) {
+  const refValor = useRef(valorAtual)
+  refValor.current = valorAtual
+
+  const iniciarArrasto = (e) => {
+    if (e.button !== 0) return
+
+    const elemento = e.currentTarget
+
+    if (elemento.requestPointerLock) {
+      elemento.requestPointerLock()
+    }
+
+    const onMouseMove = (moveEvent) => {
+      const delta = moveEvent.movementX || 0
+      if (delta !== 0) {
+        const novo = refValor.current + delta * passo
+        aoMudar(Number(novo.toFixed(4)))
+      }
+    }
+
+    const onMouseUp = () => {
+      if (document.exitPointerLock) {
+        document.exitPointerLock()
+      }
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
+  return iniciarArrasto
 }
 
 function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
-  let passo = 1
-  if (categoria === 'fisica' || rotulo.toLowerCase().includes('taxa') || rotulo.toLowerCase().includes('fator') || rotulo.toLowerCase().includes('escala') || rotulo.toLowerCase().includes('ratio')) {
-    passo = 0.1
+  let passo = 0.5
+  const chaveLower = chave.toLowerCase()
+  if (
+    categoria === 'fisica' ||
+    chaveLower.includes('taxa') ||
+    chaveLower.includes('fator') ||
+    chaveLower.includes('escala') ||
+    chaveLower.includes('ratio') ||
+    chaveLower.includes('aceleracao') ||
+    chaveLower.includes('atrito') ||
+    chaveLower.includes('ruido') ||
+    chaveLower.includes('inclinacao') ||
+    chaveLower.includes('opacidade')
+  ) {
+    passo = 0.005
+  } else if (chaveLower.includes('quantidade') || chaveLower.includes('segmentos') || chaveLower.includes('subdivisoes')) {
+    passo = 1
   }
 
-  const valorAtual = config[categoria][chave];
+  const valorAtual = config[categoria][chave]
+
+  const estiloLabelArrastavel = {
+    cursor: 'ew-resize',
+    userSelect: 'none',
+    display: 'inline-block'
+  }
 
   if (Array.isArray(valorAtual)) {
+    const eixos = ['X', 'Y', 'Z']
     return (
-      <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
-        <label>{rotulo} (x, y, z)</label>
-        {valorAtual.map((v, index) => (
-          <input
-            key={index}
-            type='number'
-            step={passo}
-            value={v}
-            onChange={(e) => {
-              const novoArray = [...valorAtual];
-              novoArray[index] = parseFloat(e.target.value) || 0;
-              atualizar(categoria, chave, novoArray);
-            }}
-          />
-        ))}
+      <div className="telaJogo__colunaMenuAtivo__inner__inputgroup">
+        <label style={{ userSelect: 'none' }}>{rotulo} (arraste os eixos):</label>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {valorAtual.map((v, index) => {
+            const onMouseDownEixo = useArrastoInfinito({
+              valorAtual: v,
+              passo,
+              aoMudar: (novoValor) => {
+                const novoArray = [...valorAtual]
+                novoArray[index] = novoValor
+                atualizar(categoria, chave, novoArray)
+              }
+            })
+
+            return (
+              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span
+                  onMouseDown={onMouseDownEixo}
+                  style={{ ...estiloLabelArrastavel, fontWeight: 'bold', fontSize: '11px', color: '#888' }}
+                  title="Clique e arraste para alterar"
+                >
+                  {eixos[index] || index}:
+                </span>
+                <input
+                  type="number"
+                  step={passo}
+                  value={v}
+                  onChange={(e) => {
+                    const novoArray = [...valorAtual]
+                    novoArray[index] = parseFloat(e.target.value) || 0
+                    atualizar(categoria, chave, novoArray)
+                  }}
+                  style={{ width: '60px' }}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
     )
   }
+
+  // Hook de arrasto para propriedades numéricas comuns
+  const onMouseDownLabel = useArrastoInfinito({
+    valorAtual: Number(valorAtual) || 0,
+    passo,
+    aoMudar: (novoValor) => atualizar(categoria, chave, novoValor)
+  })
+
   return (
-    <div className='telaJogo__colunaMenuAtivo__inner__inputgroup'>
-      <label>{rotulo}</label>
+    <div className="telaJogo__colunaMenuAtivo__inner__inputgroup">
+      <label
+        onMouseDown={onMouseDownLabel}
+        style={estiloLabelArrastavel}
+        title="Clique e arraste para a esquerda/direita para alterar"
+      >
+        {rotulo}
+      </label>
       <input
-        type='number'
+        type="number"
         step={passo}
         value={valorAtual}
         onChange={(e) => atualizar(categoria, chave, e.target.value)}
@@ -80,7 +174,6 @@ function FundoImagem() {
 }
 
 export default function App() {
-
   const [config, setConfig] = useState({
     carro: {
       dimensoes: {
@@ -109,7 +202,7 @@ export default function App() {
         anguloVolanteMax: 0.7,
         aderenciaPista: 0.01,
         atritoEscalar: 0.9999,
-        atritoLinear: 0.002,
+        atritoLinear: 0.002
       }
     },
     terreno: {
@@ -119,10 +212,10 @@ export default function App() {
         espacamento: 1000.0,
         ondulacao: 1000.0,
         fatorborda: 0.3,
-        repeticoesTextura: 200.0,
+        repeticoesTextura: 200.0
       },
       visualizacao: {
-        fatorOpacidade: 1.0,
+        fatorOpacidade: 1.0
       }
     },
     arvore: {
@@ -148,7 +241,7 @@ export default function App() {
         galhoAlturaRatioRandExtra: 0.25,
         galhoRaioBaseRatio: 0.4,
         galhoRaioPontaRatio: 0.15,
-        distanciaEstrada: 20.0,
+        distanciaEstrada: 20.0
       }
     },
     grama: {
@@ -157,7 +250,7 @@ export default function App() {
         altura: 16.0,
         raio: 22.0,
         segmentos: 2,
-        distanciaEstrada: 30.0,
+        distanciaEstrada: 30.0
       }
     },
     moita: {
@@ -165,7 +258,7 @@ export default function App() {
         quantidade: 2000,
         altura: 40.0,
         raio: 30.0,
-        distanciaEstrada: 50.0,
+        distanciaEstrada: 50.0
       }
     },
     estrada: {
@@ -174,30 +267,28 @@ export default function App() {
         quantidadePontosControle: 20.0,
         raioBase: 0.35,
         quantidadeRuido: 0.5,
-        offsetElevacao: 0.7,
+        offsetElevacao: 0.7
       }
     }
   })
 
   const [abaAtiva, setAbaAtiva] = useState(null)
-
   const [carros, setCarros] = useState([])
-
   const [cameraLivre, setCameraLivre] = useState(false)
 
   useEffect(() => {
     const intervalo = setInterval(() => {
       if (TerrenoState.pontosEstrada && TerrenoState.pontosEstrada.length > 0) {
-        const p = TerrenoState.pontosEstrada[0];
-        setCarros([{ id: 1, matiz: 0.0, pos: [p.x, p.y + 3, p.z] }]);
-        clearInterval(intervalo);
+        const p = TerrenoState.pontosEstrada[0]
+        setCarros([{ id: 1, matiz: 0.0, pos: [p.x, p.y + 3, p.z] }])
+        clearInterval(intervalo)
       }
-    }, 100);
-    return () => clearInterval(intervalo); 
-  }, []);
+    }, 100)
+    return () => clearInterval(intervalo)
+  }, [])
 
   const atualizarConfigGeral = (aba, categoria, chave, valor) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       [aba]: {
         ...prev[aba],
@@ -210,17 +301,17 @@ export default function App() {
   }
 
   const gerarCarro = () => {
-    setCarros(antigos => {
+    setCarros((antigos) => {
       const quantidade = antigos.length
       const novomatiz = geraCorCarro(quantidade)
 
-      let novaPosicao = [0, 10, 0];
+      let novaPosicao = [0, 10, 0]
       if (TerrenoState.pontosEstrada && TerrenoState.pontosEstrada.length > 0) {
-        const indiceAleatorio = Math.floor(Math.random() * TerrenoState.pontosEstrada.length);
-        const p = TerrenoState.pontosEstrada[indiceAleatorio];
-        novaPosicao = [p.x, p.y + 3, p.z];
+        const indiceAleatorio = Math.floor(Math.random() * TerrenoState.pontosEstrada.length)
+        const p = TerrenoState.pontosEstrada[indiceAleatorio]
+        novaPosicao = [p.x, p.y + 3, p.z]
       } else {
-        novaPosicao = [Math.random() * 80 - 40, 10, Math.random() * 80 - 40];
+        novaPosicao = [Math.random() * 80 - 40, 10, Math.random() * 80 - 40]
       }
 
       return [
@@ -246,10 +337,9 @@ export default function App() {
 
   return (
     <KeyboardControls map={teclas}>
-      <div className='telaJogo'>
-
-        <div className='telaJogo__colunaMenu'>
-          {Object.keys(config).map(aba => (
+      <div className="telaJogo">
+        <div className="telaJogo__colunaMenu">
+          {Object.keys(config).map((aba) => (
             <button
               key={aba}
               onClick={() => setAbaAtiva(abaAtiva === aba ? null : aba)}
@@ -278,14 +368,18 @@ export default function App() {
         </div>
 
         {abaAtiva && (
-          <div className='telaJogo__colunaMenuAtivo'>
-            <div className='telaJogo__colunaMenuAtivo__inner'>
+          <div className="telaJogo__colunaMenuAtivo">
+            <div className="telaJogo__colunaMenuAtivo__inner">
               {Object.entries(config[abaAtiva]).map(([categoria, propriedades]) => (
-                <div key={categoria} className='telaJogo__colunaMenuAtivo__inner__categoria' style={{ marginBottom: '15px' }}>
+                <div
+                  key={categoria}
+                  className="telaJogo__colunaMenuAtivo__inner__categoria"
+                  style={{ marginBottom: '15px' }}
+                >
                   <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
                     {categoria}
                   </div>
-                  {Object.keys(propriedades).map(chave => (
+                  {Object.keys(propriedades).map((chave) => (
                     <InputConfig
                       key={`${categoria}-${chave}`}
                       rotulo={chave}
@@ -308,7 +402,7 @@ export default function App() {
           <ambientLight intensity={0.5} />
           <directionalLight position={[100, 200, 100]} />
 
-          {carros.map(carro => (
+          {carros.map((carro) => (
             <Veiculo
               key={carro.id}
               matiz={carro.matiz}
