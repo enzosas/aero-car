@@ -207,7 +207,8 @@ export default function App() {
         anguloVolanteMax: 0.7,
         aderenciaPista: 0.01,
         atritoEscalar: 0.9999,
-        atritoLinear: 0.002
+        atritoLinear: 0.002,
+        multiplicadorAnguloDrift: 2.5
       }
     },
     terreno: {

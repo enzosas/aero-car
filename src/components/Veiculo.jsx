@@ -92,6 +92,7 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
     const [rotacaoCarro, setRotacaoCarro] = useState(0)
 
     const posAnterior = useRef(new THREE.Vector3(...posicaoInicial))
+    const vetorMovimento = useRef(new THREE.Vector3(0, 0, 1))
 
     const isDragging = useRef(false)
     const angulosRelativos = useRef({ pitch: Math.PI / 3 })
@@ -144,9 +145,15 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
 
         const velVolanteDinamica = config.fisica.velocidadeVolante;
         let limiteVolanteDinamico = config.fisica.anguloVolanteMax;
+
         const aderenciaPista = config.fisica.aderenciaPista;
         const velParaCalculoAtrito = Math.max(0.0001, Math.abs(velAtual));
-        const limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velParaCalculoAtrito * velParaCalculoAtrito);
+        let limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velParaCalculoAtrito * velParaCalculoAtrito);
+
+        if (modoDirecao === ModoDirecao.DRIFT) {
+            limiteAtritoPneu *= config.fisica.multiplicadorAnguloDrift;
+        }
+
         limiteVolanteDinamico = Math.min(limiteVolanteDinamico, limiteAtritoPneu);
 
         if (esquerda) {
@@ -166,7 +173,6 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
         }
         anguloAtual = THREE.MathUtils.clamp(anguloAtual, -limiteVolanteDinamico, limiteVolanteDinamico);
 
-        setVelocidade(velAtual)
         setAnguloVolante(anguloAtual)
 
         if (chassiRef.current) {
@@ -184,8 +190,18 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
 
             const vetorFrente = new THREE.Vector3(0, 0, 1).applyQuaternion(rotacaoFinal)
 
-            chassiRef.current.position.x += vetorFrente.x * velAtual
-            chassiRef.current.position.z += vetorFrente.z * velAtual
+            if (modoDirecao === ModoDirecao.GRIP) {
+                vetorMovimento.current.copy(vetorFrente)
+            } else if (modoDirecao === ModoDirecao.DRIFT) {
+                const aderenciaPista = config.fisica.aderenciaPista;
+                vetorMovimento.current.lerp(vetorFrente, 0.01).normalize()
+                const alinhamento = vetorMovimento.current.dot(vetorFrente)
+                const escorregamento = 1 - Math.abs(alinhamento)
+                velAtual -= velAtual * escorregamento * aderenciaPista
+            }
+
+            chassiRef.current.position.x += vetorMovimento.current.x * velAtual
+            chassiRef.current.position.z += vetorMovimento.current.z * velAtual
             chassiRef.current.position.y = obteralturaterrenoem(chassiRef.current.position.x, chassiRef.current.position.z)
             chassiRef.current.quaternion.slerp(rotacaoFinal, 0.15)
 
@@ -240,6 +256,8 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
                 rodaDirFrenteRef.current.rotation.y = anguloAtual
             }
         }
+        setVelocidade(velAtual)
+        setAnguloVolante(anguloAtual)
     })
 
     const metadeLargura = config.dimensoes.largura / 2
