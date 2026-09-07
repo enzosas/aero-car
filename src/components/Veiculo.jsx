@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { obteralturaterrenoem, obternormalterrenoem } from './Terreno'
+import { ModoDirecao } from '../App'
 
 function Chassi({ matiz, dimensoes }) {
     const geometria = useMemo(() => {
@@ -80,7 +81,7 @@ function Chassi({ matiz, dimensoes }) {
     )
 }
 
-export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config, segueCamera = false }) {
+export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config, segueCamera = false, modoDirecao }) {
     const chassiref = useRef()
     const rodaesqfrenteref = useRef()
     const rodadirfrenteref = useRef()

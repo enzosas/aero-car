@@ -272,9 +272,24 @@ export default function App() {
     }
   })
 
+  const ModoDirecao = Object.freeze({
+    GRIP: 'modo grip',
+    DRIFT: 'modo drift',
+  });
+
   const [abaAtiva, setAbaAtiva] = useState(null)
   const [carros, setCarros] = useState([])
   const [cameraLivre, setCameraLivre] = useState(false)
+  const [modoDirecao, setModoDirecao] = useState(ModoDirecao.GRIP)
+
+  function alternarModoDirecao() {
+    setModoDirecao(() => {
+      const novoModo = (modoDirecao === ModoDirecao.DRIFT)
+        ? ModoDirecao.GRIP
+        : ModoDirecao.DRIFT;
+        return novoModo;
+    })
+  }
 
   useEffect(() => {
     const intervalo = setInterval(() => {
@@ -365,6 +380,13 @@ export default function App() {
               <span className="text">{cameraLivre ? 'seguir carro' : 'câmera livre'}</span>
             </div>
           </button>
+
+          <button onClick={alternarModoDirecao} className="frutiger-button">
+            <div className="inner">
+              <div className="top-white"></div>
+              <span className="text">{modoDirecao}</span>
+            </div>
+          </button>
         </div>
 
         {abaAtiva && (
@@ -409,6 +431,7 @@ export default function App() {
               posicaoInicial={carro.pos}
               config={config.carro}
               segueCamera={!cameraLivre && carro.id === 1}
+              modoDirecao={modoDirecao}
             />
           ))}
 
