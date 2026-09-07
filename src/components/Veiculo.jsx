@@ -7,38 +7,38 @@ import { ModoDirecao } from '../App'
 
 function Chassi({ matiz, dimensoes }) {
     const geometria = useMemo(() => {
-        const metadelarg = dimensoes.largura / 2
-        const metadecomp = dimensoes.comprimento / 2
-        const alturachao = dimensoes.alturachao
-        const alturaporta = alturachao + dimensoes.alturaporta
-        const alturaparabrisa = dimensoes.alturaparabrisa
-        const comp = dimensoes.comprimento
+        const metadeLargura = dimensoes.largura / 2
+        const metadeComprimento = dimensoes.comprimento / 2
+        const alturaChao = dimensoes.alturachao
+        const alturaPorta = alturaChao + dimensoes.alturaporta
+        const alturaParabrisa = dimensoes.alturaparabrisa
+        const comprimento = dimensoes.comprimento
 
         const c = []
 
-        c[0] = new THREE.Vector3(-metadelarg, alturachao, -metadecomp)
-        c[1] = new THREE.Vector3(metadelarg, alturachao, -metadecomp)
-        c[2] = new THREE.Vector3(metadelarg, alturachao, metadecomp)
-        c[3] = new THREE.Vector3(-metadelarg, alturachao, metadecomp)
+        c[0] = new THREE.Vector3(-metadeLargura, alturaChao, -metadeComprimento)
+        c[1] = new THREE.Vector3(metadeLargura, alturaChao, -metadeComprimento)
+        c[2] = new THREE.Vector3(metadeLargura, alturaChao, metadeComprimento)
+        c[3] = new THREE.Vector3(-metadeLargura, alturaChao, metadeComprimento)
 
-        c[4] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp)
-        c[5] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp)
-        c[6] = new THREE.Vector3(metadelarg, alturaporta, metadecomp)
-        c[7] = new THREE.Vector3(-metadelarg, alturaporta, metadecomp)
+        c[4] = new THREE.Vector3(-metadeLargura, alturaPorta, -metadeComprimento)
+        c[5] = new THREE.Vector3(metadeLargura, alturaPorta, -metadeComprimento)
+        c[6] = new THREE.Vector3(metadeLargura, alturaPorta, metadeComprimento)
+        c[7] = new THREE.Vector3(-metadeLargura, alturaPorta, metadeComprimento)
 
-        c[8] = new THREE.Vector3(-metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitTras))
-        c[9] = new THREE.Vector3(metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitTras))
-        c[10] = new THREE.Vector3(metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitFrente))
-        c[11] = new THREE.Vector3(-metadelarg, alturaporta + alturaparabrisa, -metadecomp + (comp * dimensoes.taxaTopoCockpitFrente))
+        c[8] = new THREE.Vector3(-metadeLargura, alturaPorta + alturaParabrisa, -metadeComprimento + (comprimento * dimensoes.taxaTopoCockpitTras))
+        c[9] = new THREE.Vector3(metadeLargura, alturaPorta + alturaParabrisa, -metadeComprimento + (comprimento * dimensoes.taxaTopoCockpitTras))
+        c[10] = new THREE.Vector3(metadeLargura, alturaPorta + alturaParabrisa, -metadeComprimento + (comprimento * dimensoes.taxaTopoCockpitFrente))
+        c[11] = new THREE.Vector3(-metadeLargura, alturaPorta + alturaParabrisa, -metadeComprimento + (comprimento * dimensoes.taxaTopoCockpitFrente))
 
-        c[12] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitTras))
-        c[13] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitTras))
-        c[14] = new THREE.Vector3(metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitFrente))
-        c[15] = new THREE.Vector3(-metadelarg, alturaporta, -metadecomp + (comp * dimensoes.taxaBaseCockpitFrente))
+        c[12] = new THREE.Vector3(-metadeLargura, alturaPorta, -metadeComprimento + (comprimento * dimensoes.taxaBaseCockpitTras))
+        c[13] = new THREE.Vector3(metadeLargura, alturaPorta, -metadeComprimento + (comprimento * dimensoes.taxaBaseCockpitTras))
+        c[14] = new THREE.Vector3(metadeLargura, alturaPorta, -metadeComprimento + (comprimento * dimensoes.taxaBaseCockpitFrente))
+        c[15] = new THREE.Vector3(-metadeLargura, alturaPorta, -metadeComprimento + (comprimento * dimensoes.taxaBaseCockpitFrente))
 
         const vertices = []
 
-        const addquad = (p1, p2, p3, p4) => {
+        const addQuad = (p1, p2, p3, p4) => {
             vertices.push(p1.x, p1.y, p1.z)
             vertices.push(p2.x, p2.y, p2.z)
             vertices.push(p3.x, p3.y, p3.z)
@@ -48,23 +48,23 @@ function Chassi({ matiz, dimensoes }) {
             vertices.push(p4.x, p4.y, p4.z)
         }
 
-        addquad(c[0], c[1], c[2], c[3])
-        addquad(c[4], c[5], c[6], c[7])
-        addquad(c[0], c[1], c[5], c[4])
-        addquad(c[3], c[2], c[6], c[7])
-        addquad(c[0], c[3], c[7], c[4])
-        addquad(c[1], c[2], c[6], c[5])
+        addQuad(c[0], c[1], c[2], c[3])
+        addQuad(c[4], c[5], c[6], c[7])
+        addQuad(c[0], c[1], c[5], c[4])
+        addQuad(c[3], c[2], c[6], c[7])
+        addQuad(c[0], c[3], c[7], c[4])
+        addQuad(c[1], c[2], c[6], c[5])
 
-        addquad(c[8], c[9], c[10], c[11])
-        addquad(c[8], c[9], c[13], c[12])
-        addquad(c[11], c[10], c[14], c[15])
-        addquad(c[8], c[11], c[15], c[12])
-        addquad(c[9], c[10], c[14], c[13])
+        addQuad(c[8], c[9], c[10], c[11])
+        addQuad(c[8], c[9], c[13], c[12])
+        addQuad(c[11], c[10], c[14], c[15])
+        addQuad(c[8], c[11], c[15], c[12])
+        addQuad(c[9], c[10], c[14], c[13])
 
-        const arrayfloat = new Float32Array(vertices)
+        const arrayFloat = new Float32Array(vertices)
         const geo = new THREE.BufferGeometry()
 
-        geo.setAttribute('position', new THREE.BufferAttribute(arrayfloat, 3))
+        geo.setAttribute('position', new THREE.BufferAttribute(arrayFloat, 3))
         geo.computeVertexNormals()
 
         return geo
@@ -82,14 +82,14 @@ function Chassi({ matiz, dimensoes }) {
 }
 
 export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config, segueCamera = false, modoDirecao }) {
-    const chassiref = useRef()
-    const rodaesqfrenteref = useRef()
-    const rodadirfrenteref = useRef()
+    const chassiRef = useRef()
+    const rodaEsqFrenteRef = useRef()
+    const rodaDirFrenteRef = useRef()
     const [, get] = useKeyboardControls()
 
-    const [velocidade, setvelocidade] = useState(0)
-    const [angulovolante, setangulovolante] = useState(0)
-    const [rotacaocarro, setrotacaocarro] = useState(0)
+    const [velocidade, setVelocidade] = useState(0)
+    const [anguloVolante, setAnguloVolante] = useState(0)
+    const [rotacaoCarro, setRotacaoCarro] = useState(0)
 
     const posAnterior = useRef(new THREE.Vector3(...posicaoInicial))
 
@@ -115,93 +115,100 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
     useFrame((state) => {
         const { frente, tras, esquerda, direita } = get()
 
-        let velatual = velocidade
-        let anguloatual = angulovolante
+        let velAtual = velocidade
+        let anguloAtual = anguloVolante
 
         if (frente) {
-            velatual += config.fisica.aceleracao
-            if (velatual > config.fisica.velmax) velatual = config.fisica.velmax
+            velAtual += config.fisica.aceleracao
+            if (velAtual > config.fisica.velmax) velAtual = config.fisica.velmax
         } else if (tras) {
-            if (velatual > 0) {
-                velatual -= config.fisica.aceleracaoFreio
-                if (velatual < config.fisica.velmin) velatual = config.fisica.velmin
+            if (velAtual > 0) {
+                velAtual -= config.fisica.aceleracaoFreio
+                if (velAtual < config.fisica.velmin) velAtual = config.fisica.velmin
             }
             else {
-                velatual -= config.fisica.aceleracao
-                if (velatual < config.fisica.velmaxre) velatual = config.fisica.velmaxre
+                velAtual -= config.fisica.aceleracao
+                if (velAtual < config.fisica.velmaxre) velAtual = config.fisica.velmaxre
             }
         } else {
-            velatual *= config.fisica.atritoEscalar
+            velAtual *= config.fisica.atritoEscalar
             const atritoMecanico = config.fisica.atritoLinear;
-            if (velatual > atritoMecanico) {
-                velatual -= atritoMecanico;
-            } else if (velatual < -atritoMecanico) {
-                velatual += atritoMecanico;
+            if (velAtual > atritoMecanico) {
+                velAtual -= atritoMecanico;
+            } else if (velAtual < -atritoMecanico) {
+                velAtual += atritoMecanico;
             } else {
-                velatual = 0;
+                velAtual = 0;
             }
         }
 
         const velVolanteDinamica = config.fisica.velocidadeVolante;
         let limiteVolanteDinamico = config.fisica.anguloVolanteMax;
         const aderenciaPista = config.fisica.aderenciaPista;
-        const velParaCalculoAtrito = Math.max(0.0001, Math.abs(velatual));
+        const velParaCalculoAtrito = Math.max(0.0001, Math.abs(velAtual));
         const limiteAtritoPneu = (aderenciaPista * config.dimensoes.comprimentorodas) / (velParaCalculoAtrito * velParaCalculoAtrito);
         limiteVolanteDinamico = Math.min(limiteVolanteDinamico, limiteAtritoPneu);
-        console.log(limiteVolanteDinamico)
 
         if (esquerda) {
-            anguloatual += velVolanteDinamica;
-            if (anguloatual > limiteVolanteDinamico) anguloatual = limiteVolanteDinamico;
+            anguloAtual += velVolanteDinamica;
+            if (anguloAtual > limiteVolanteDinamico) anguloAtual = limiteVolanteDinamico;
         } else if (direita) {
-            anguloatual -= velVolanteDinamica;
-            if (anguloatual < -limiteVolanteDinamico) anguloatual = -limiteVolanteDinamico;
+            anguloAtual -= velVolanteDinamica;
+            if (anguloAtual < -limiteVolanteDinamico) anguloAtual = -limiteVolanteDinamico;
         } else {
-            if (anguloatual > 0) {
-                anguloatual -= velVolanteDinamica;
-                if (anguloatual < 0) anguloatual = 0;
-            } else if (anguloatual < 0) {
-                anguloatual += velVolanteDinamica;
-                if (anguloatual > 0) anguloatual = 0;
+            if (anguloAtual > 0) {
+                anguloAtual -= velVolanteDinamica;
+                if (anguloAtual < 0) anguloAtual = 0;
+            } else if (anguloAtual < 0) {
+                anguloAtual += velVolanteDinamica;
+                if (anguloAtual > 0) anguloAtual = 0;
             }
         }
-        anguloatual = THREE.MathUtils.clamp(anguloatual, -limiteVolanteDinamico, limiteVolanteDinamico);
+        anguloAtual = THREE.MathUtils.clamp(anguloAtual, -limiteVolanteDinamico, limiteVolanteDinamico);
 
-        setvelocidade(velatual)
-        setangulovolante(anguloatual)
+        setVelocidade(velAtual)
+        setAnguloVolante(anguloAtual)
 
-        if (chassiref.current) {
-            const taxagiro = (velatual / config.dimensoes.comprimentorodas) * Math.tan(anguloatual)
-            let novarotacao = rotacaocarro + taxagiro
-            setrotacaocarro(novarotacao)
-            const posx = chassiref.current.position.x
-            const posz = chassiref.current.position.z
-            const cima = obternormalterrenoem(posx, posz)
-            const rotacaoVolante = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), novarotacao)
+        if (chassiRef.current) {
+            const taxaGiro = (velAtual / config.dimensoes.comprimentorodas) * Math.tan(anguloAtual)
+            let novaRotacao = rotacaoCarro + taxaGiro
+            setRotacaoCarro(novaRotacao)
+
+            const posX = chassiRef.current.position.x
+            const posZ = chassiRef.current.position.z
+            const cima = obternormalterrenoem(posX, posZ)
+
+            const rotacaoVolante = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), novaRotacao)
             const inclinacaoChao = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), cima)
             const rotacaoFinal = new THREE.Quaternion().multiplyQuaternions(inclinacaoChao, rotacaoVolante)
-            const frentevetor = new THREE.Vector3(0, 0, 1).applyQuaternion(rotacaoFinal)
-            chassiref.current.position.x += frentevetor.x * velatual
-            chassiref.current.position.z += frentevetor.z * velatual
-            chassiref.current.position.y = obteralturaterrenoem(chassiref.current.position.x, chassiref.current.position.z)
-            chassiref.current.quaternion.slerp(rotacaoFinal, 0.15)
+
+            const vetorFrente = new THREE.Vector3(0, 0, 1).applyQuaternion(rotacaoFinal)
+
+            chassiRef.current.position.x += vetorFrente.x * velAtual
+            chassiRef.current.position.z += vetorFrente.z * velAtual
+            chassiRef.current.position.y = obteralturaterrenoem(chassiRef.current.position.x, chassiRef.current.position.z)
+            chassiRef.current.quaternion.slerp(rotacaoFinal, 0.15)
 
             if (segueCamera && state.controls) {
                 const alturaDaCamera = new THREE.Vector3(0, config.dimensoes.alturachao + config.dimensoes.alturaporta + config.dimensoes.alturaparabrisa)
-                const alvocamera = chassiref.current.position.clone().add(alturaDaCamera)
-                const deltaMove = new THREE.Vector3().subVectors(chassiref.current.position, posAnterior.current)
+                const alvoCamera = chassiRef.current.position.clone().add(alturaDaCamera)
+                const deltaMove = new THREE.Vector3().subVectors(chassiRef.current.position, posAnterior.current)
                 state.camera.position.add(deltaMove)
-                const chassiQuat = chassiref.current.quaternion
+
+                const chassiQuat = chassiRef.current.quaternion
                 const vetorCima = new THREE.Vector3(0, 1, 0).applyQuaternion(chassiQuat).normalize()
                 const vetorTras = new THREE.Vector3(0, 0, -1).applyQuaternion(chassiQuat).normalize()
+
                 if (!initCam.current) {
                     const offsetInicial = vetorTras.clone().multiplyScalar(200).add(vetorCima.clone().multiplyScalar(15))
-                    state.camera.position.copy(alvocamera).add(offsetInicial)
+                    state.camera.position.copy(alvoCamera).add(offsetInicial)
                     initCam.current = true
                 }
-                const currentOffset = state.camera.position.clone().sub(alvocamera)
+
+                const currentOffset = state.camera.position.clone().sub(alvoCamera)
                 const distance = currentOffset.length()
-                const estaParado = Math.abs(velatual) < 0.5
+                const estaParado = Math.abs(velAtual) < 0.5
+
                 if (isDragging.current || estaParado) {
                     angulosRelativos.current.pitch = currentOffset.angleTo(vetorCima)
                 } else {
@@ -220,52 +227,53 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
                         currentOffset.applyAxisAngle(axis, angleToIdeal * 0.08)
                     }
                     currentOffset.multiplyScalar(distance)
-                    state.camera.position.copy(alvocamera).add(currentOffset)
+                    state.camera.position.copy(alvoCamera).add(currentOffset)
                 }
-                state.controls.target.copy(alvocamera)
+                state.controls.target.copy(alvoCamera)
                 state.controls.update()
             }
-            posAnterior.current.copy(chassiref.current.position)
-            if (rodaesqfrenteref.current && rodadirfrenteref.current) {
-                rodaesqfrenteref.current.rotation.y = anguloatual
-                rodadirfrenteref.current.rotation.y = anguloatual
+
+            posAnterior.current.copy(chassiRef.current.position)
+
+            if (rodaEsqFrenteRef.current && rodaDirFrenteRef.current) {
+                rodaEsqFrenteRef.current.rotation.y = anguloAtual
+                rodaDirFrenteRef.current.rotation.y = anguloAtual
             }
         }
     })
 
-    const metadelarg = config.dimensoes.largura / 2
-    const metadecomp = config.dimensoes.comprimentorodas / 2
-    const raioroda = config.rodas.raio
-    const larguraroda = config.rodas.largura
-    const segrodas = config.rodas.segmentos
-    const alturachao = config.dimensoes.alturachao
-    const rodaRaio = config.rodas.raio
+    const metadeLargura = config.dimensoes.largura / 2
+    const metadeComprimentoRodas = config.dimensoes.comprimentorodas / 2
+    const raioRoda = config.rodas.raio
+    const larguraRoda = config.rodas.largura
+    const segRodas = config.rodas.segmentos
+    const alturaChao = config.dimensoes.alturachao
 
     return (
-        <group ref={chassiref} position={posicaoInicial}>
+        <group ref={chassiRef} position={posicaoInicial}>
             <Chassi matiz={matiz} dimensoes={config.dimensoes} />
 
-            <group ref={rodaesqfrenteref} position={[-metadelarg, rodaRaio, metadecomp]}>
+            <group ref={rodaEsqFrenteRef} position={[-metadeLargura, raioRoda, metadeComprimentoRodas]}>
                 <mesh rotation={[0, 0, Math.PI / 2]}>
-                    <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
+                    <cylinderGeometry args={[raioRoda, raioRoda, larguraRoda, segRodas]} />
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
             </group>
 
-            <group ref={rodadirfrenteref} position={[metadelarg, rodaRaio, metadecomp]}>
+            <group ref={rodaDirFrenteRef} position={[metadeLargura, raioRoda, metadeComprimentoRodas]}>
                 <mesh rotation={[0, 0, Math.PI / 2]}>
-                    <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
+                    <cylinderGeometry args={[raioRoda, raioRoda, larguraRoda, segRodas]} />
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
             </group>
 
-            <mesh position={[-metadelarg, rodaRaio, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
+            <mesh position={[-metadeLargura, raioRoda, -metadeComprimentoRodas]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[raioRoda, raioRoda, larguraRoda, segRodas]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
 
-            <mesh position={[metadelarg, rodaRaio, -metadecomp]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[raioroda, raioroda, larguraroda, segrodas]} />
+            <mesh position={[metadeLargura, raioRoda, -metadeComprimentoRodas]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[raioRoda, raioRoda, larguraRoda, segRodas]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
         </group>

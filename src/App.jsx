@@ -8,6 +8,11 @@ import './App.css'
 import fundoUrl from './fundo.jpg'
 import { TerrenoState } from './components/Terreno'
 
+export const ModoDirecao = Object.freeze({
+  GRIP: 'modo grip',
+  DRIFT: 'modo drift',
+});
+
 const geraCorCarro = (quantidade) => {
   const grupo = Math.floor(quantidade / 4)
   const posicaonogrupo = quantidade % 4
@@ -271,11 +276,6 @@ export default function App() {
       }
     }
   })
-
-  const ModoDirecao = Object.freeze({
-    GRIP: 'modo grip',
-    DRIFT: 'modo drift',
-  });
 
   const [abaAtiva, setAbaAtiva] = useState(null)
   const [carros, setCarros] = useState([])
