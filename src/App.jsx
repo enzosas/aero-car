@@ -32,7 +32,7 @@ const geraCorCarro = (quantidade) => {
 	return 0.25 * posicaonogrupo + 0.25 * offset
 }
 
-function useArrastoInfinito({ valorAtual, aoMudar, passo }) {
+function useArrastoInfinito({ valorAtual, passo, aoMudar }) {
 	const refValor = useRef(valorAtual)
 	refValor.current = valorAtual
 
@@ -48,6 +48,7 @@ function useArrastoInfinito({ valorAtual, aoMudar, passo }) {
 		const onMouseMove = (moveEvent) => {
 			const delta = moveEvent.movementX || 0
 			if (delta !== 0) {
+				// Usa o passo fixo e definitivo repassado pelas props
 				const novo = refValor.current + delta * passo
 				aoMudar(Number(novo.toFixed(4)))
 			}
@@ -69,26 +70,20 @@ function useArrastoInfinito({ valorAtual, aoMudar, passo }) {
 }
 
 function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
-	let passo = 0.5
-	const chaveLower = chave.toLowerCase()
-	if (
-		categoria === 'fisica' ||
-		chaveLower.includes('taxa') ||
-		chaveLower.includes('fator') ||
-		chaveLower.includes('escala') ||
-		chaveLower.includes('ratio') ||
-		chaveLower.includes('aceleracao') ||
-		chaveLower.includes('atrito') ||
-		chaveLower.includes('ruido') ||
-		chaveLower.includes('inclinacao') ||
-		chaveLower.includes('opacidade')
-	) {
-		passo = 0.005
-	} else if (chaveLower.includes('quantidade') || chaveLower.includes('segmentos') || chaveLower.includes('subdivisoes')) {
-		passo = 1
-	}
-
 	const valorAtual = config[categoria][chave]
+
+	const [passoFixo] = useState(() => {
+		const calculaPasso = (val) => {
+			let p = Math.abs(Number(val) * 0.1)
+			if (p === 0) return 0.01
+			return Number(p.toPrecision(2))
+		}
+
+		if (Array.isArray(valorAtual)) {
+			return valorAtual.map(v => calculaPasso(v))
+		}
+		return calculaPasso(valorAtual)
+	})
 
 	const estiloLabelArrastavel = {
 		cursor: 'ew-resize',
@@ -103,9 +98,11 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
 				<label style={{ userSelect: 'none' }}>{rotulo} (arraste os eixos):</label>
 				<div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
 					{valorAtual.map((v, index) => {
+						const passoDoEixo = passoFixo[index]
+
 						const onMouseDownEixo = useArrastoInfinito({
 							valorAtual: v,
-							passo,
+							passo: passoDoEixo,
 							aoMudar: (novoValor) => {
 								const novoArray = [...valorAtual]
 								novoArray[index] = novoValor
@@ -124,7 +121,7 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
 								</span>
 								<input
 									type="number"
-									step={passo}
+									step={passoDoEixo}
 									value={v}
 									onChange={(e) => {
 										const novoArray = [...valorAtual]
@@ -141,10 +138,10 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
 		)
 	}
 
-	// Hook de arrasto para propriedades numéricas comuns
+	// Hook de arrasto para propriedades numéricas comuns usando o passo travado
 	const onMouseDownLabel = useArrastoInfinito({
 		valorAtual: Number(valorAtual) || 0,
-		passo,
+		passo: passoFixo,
 		aoMudar: (novoValor) => atualizar(categoria, chave, novoValor)
 	})
 
@@ -159,7 +156,7 @@ function InputConfig({ rotulo, categoria, chave, config, atualizar }) {
 			</label>
 			<input
 				type="number"
-				step={passo}
+				step={passoFixo}
 				value={valorAtual}
 				onChange={(e) => atualizar(categoria, chave, e.target.value)}
 			/>
