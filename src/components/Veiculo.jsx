@@ -143,7 +143,6 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
             }
         }
 
-        const velVolanteDinamica = config.fisica.velocidadeVolante;
         let limiteVolanteDinamico = config.fisica.anguloVolanteMax;
 
         const aderenciaPista = config.fisica.aderenciaPista;
@@ -156,24 +155,20 @@ export default function Veiculo({ matiz = 0, posicaoInicial = [0, 0, 0], config,
 
         limiteVolanteDinamico = Math.min(limiteVolanteDinamico, limiteAtritoPneu);
 
-        if (esquerda) {
-            anguloAtual += velVolanteDinamica;
-            if (anguloAtual > limiteVolanteDinamico) anguloAtual = limiteVolanteDinamico;
-        } else if (direita) {
-            anguloAtual -= velVolanteDinamica;
-            if (anguloAtual < -limiteVolanteDinamico) anguloAtual = -limiteVolanteDinamico;
-        } else {
-            if (anguloAtual > 0) {
-                anguloAtual -= velVolanteDinamica;
-                if (anguloAtual < 0) anguloAtual = 0;
-            } else if (anguloAtual < 0) {
-                anguloAtual += velVolanteDinamica;
-                if (anguloAtual > 0) anguloAtual = 0;
-            }
-        }
-        anguloAtual = THREE.MathUtils.clamp(anguloAtual, -limiteVolanteDinamico, limiteVolanteDinamico);
+        let anguloAlvo = 0;
 
-        setAnguloVolante(anguloAtual)
+        if (esquerda) {
+            anguloAlvo = limiteVolanteDinamico;
+        } else if (direita) {
+            anguloAlvo = -limiteVolanteDinamico;
+        } else {
+            anguloAlvo = 0;
+        }
+        console.log(anguloAlvo)
+        const fatorSuavizacao = Math.min(1, 1000 * state.clock.getDelta());;
+        anguloAtual = THREE.MathUtils.lerp(anguloAtual, anguloAlvo, fatorSuavizacao);
+
+        setAnguloVolante(anguloAlvo)
 
         if (chassiRef.current) {
             const taxaGiro = (velAtual / config.dimensoes.comprimentorodas) * Math.tan(anguloAtual)

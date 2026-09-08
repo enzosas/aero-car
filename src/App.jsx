@@ -200,7 +200,6 @@ export default function App() {
 				aceleracaoFreio: 0.01,
 				velmax: 2.0,
 				velmaxre: -0.25,
-				velocidadeVolante: 0.01,
 				anguloVolanteMax: 0.7,
 				aderenciaPista: 0.01,
 				atritoEscalar: 0.9999,
